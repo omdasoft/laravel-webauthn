@@ -20,6 +20,7 @@ class SessionStorage implements ChallengeStorage
 
         if (Session::has($expiryKey) && now()->timestamp > Session::get($expiryKey)) {
             Session::forget([$key, $expiryKey]);
+
             return null;
         }
 
@@ -30,7 +31,7 @@ class SessionStorage implements ChallengeStorage
     {
         Session::forget([
             "webauthn_challenge:{$challengeId}",
-            "webauthn_challenge_expiry:{$challengeId}"
+            "webauthn_challenge_expiry:{$challengeId}",
         ]);
     }
 }
