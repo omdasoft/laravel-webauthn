@@ -17,9 +17,9 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-webauthn')
-            ->hasConfigFile()
+            ->hasConfigFile('webauthn')
             ->hasViews()
-            ->hasMigration('create_laravel_webauthn_table')
+            ->hasMigration('create_passkey_table')
             ->hasCommand(LaravelWebauthnCommand::class);
     }
 }
