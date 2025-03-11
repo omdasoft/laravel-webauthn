@@ -4,8 +4,10 @@ namespace Omdasoft\LaravelWebauthn;
 
 use Omdasoft\LaravelWebauthn\Storage\CacheStorage;
 
-class LaravelWebauthn {
+class LaravelWebauthn
+{
     protected $storage;
+
     public function __construct(CacheStorage $storage)
     {
         $this->storage = $storage;
@@ -13,21 +15,21 @@ class LaravelWebauthn {
 
     public function generateRegistrationOptions()
     {
-        //TODO: implement generate registration options
+        // TODO: implement generate registration options
     }
 
     public function completeRegistration()
     {
-        //TODO: implement complete registration
+        // TODO: implement complete registration
     }
 
     public function generateLoginOptions()
     {
-        //TODO: implementy generate login options
+        // TODO: implementy generate login options
     }
 
     public function completeLogin()
     {
-        //TODO: implement complete login
+        // TODO: implement complete login
     }
 }
