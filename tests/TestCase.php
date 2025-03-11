@@ -3,8 +3,8 @@
 namespace Omdasoft\LaravelWebauthn\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Orchestra\Testbench\TestCase as Orchestra;
 use Omdasoft\LaravelWebauthn\LaravelWebauthnServiceProvider;
+use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {

@@ -2,9 +2,9 @@
 
 namespace Omdasoft\LaravelWebauthn;
 
+use Omdasoft\LaravelWebauthn\Commands\LaravelWebauthnCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Omdasoft\LaravelWebauthn\Commands\LaravelWebauthnCommand;
 
 class LaravelWebauthnServiceProvider extends PackageServiceProvider
 {
