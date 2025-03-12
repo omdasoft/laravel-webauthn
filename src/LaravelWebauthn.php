@@ -61,13 +61,13 @@ class LaravelWebauthn
 
         $storedChallenge = $this->getChallenge($params['challenge_id']);
 
-        if (!$storedChallenge) {
+        if (! $storedChallenge) {
             throw new \Exception('Challenge not found');
         }
 
         $publicKeyCredential = $params['passkey']; // Assume JSON is decoded by the caller
 
-        if (!$publicKeyCredential->response instanceof AuthenticatorAttestationResponse) {
+        if (! $publicKeyCredential->response instanceof AuthenticatorAttestationResponse) {
             throw new \Exception('Not a valid response');
         }
 
@@ -115,7 +115,7 @@ class LaravelWebauthn
     {
         $publicKeyCredential = $params['passkey']; // Assume JSON decoded
 
-        if (!$publicKeyCredential->response instanceof AuthenticatorAssertionResponse) {
+        if (! $publicKeyCredential->response instanceof AuthenticatorAssertionResponse) {
             throw new \Exception('Invalid authentication');
         }
 
@@ -123,14 +123,14 @@ class LaravelWebauthn
             ->where('credential_id', $this->base64urlEncode($publicKeyCredential->rawId))
             ->firstOrFail();
 
-        if (!$storedCredential->is_enabled) {
+        if (! $storedCredential->is_enabled) {
             throw new \Exception('This passkey is disabled');
         }
 
         $publicKeyCredentialSource = json_decode($storedCredential->data, true);
         $storedChallenge = $this->getChallenge($params['challenge_id']);
 
-        if (!$storedChallenge) {
+        if (! $storedChallenge) {
             throw new \Exception('No challenge found');
         }
 
@@ -162,9 +162,8 @@ class LaravelWebauthn
     private function storeChallenge(
         string $challengeId,
         PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions $options,
-        string $deviceName = null
-    ): void
-    {
+        ?string $deviceName = null
+    ): void {
         $this->challengeStorage->store($challengeId, $options, $deviceName);
     }
 

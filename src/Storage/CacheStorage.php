@@ -14,8 +14,7 @@ class CacheStorage implements ChallengeStorage
         PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions $options,
         string $deviceName,
         int $ttl
-    ): void
-    {
+    ): void {
         Cache::put("webauthn_challenge:{$challengeId}", $options, now()->addSeconds($ttl));
     }
 

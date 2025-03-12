@@ -28,9 +28,9 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton(ChallengeStorage::class, function () {
             return match (config('webauthn.storage.driver', 'cache')) {
-                'cache' => new CacheStorage(),
-                'session' => new SessionStorage(),
-                'database' => new DatabaseStorage(),
+                'cache' => new CacheStorage,
+                'session' => new SessionStorage,
+                'database' => new DatabaseStorage,
                 default => throw new \InvalidArgumentException('Invalid WebAuthn storage driver'),
             };
         });
