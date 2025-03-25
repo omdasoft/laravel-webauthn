@@ -22,7 +22,7 @@
         "phpdocumentor/reflection-docblock": "^5.6",
         "symfony/property-access": "^7.2",
         "symfony/serializer": "^7.2",
-        "web-auth/webauthn-lib": "4.9"
+        "web-auth/webauthn-lib": "5.2.2"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
