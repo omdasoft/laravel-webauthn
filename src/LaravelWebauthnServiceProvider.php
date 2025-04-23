@@ -2,10 +2,12 @@
 
 namespace Omdasoft\LaravelWebauthn;
 
-use Omdasoft\LaravelWebauthn\Commands\LaravelWebauthnCommand;
-use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
 use Spatie\LaravelPackageTools\Package;
+use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
+use Omdasoft\LaravelWebauthn\Storage\StorageManager;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
+use Omdasoft\LaravelWebauthn\Commands\LaravelWebauthnCommand;
 
 class LaravelWebauthnServiceProvider extends PackageServiceProvider
 {
@@ -20,23 +22,23 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
             ->name('laravel-webauthn')
             ->hasConfigFile('webauthn')
             ->hasViews()
+            ->hasRoute('routes')
             ->hasMigration('create_passkey_table')
             ->hasCommand(LaravelWebauthnCommand::class);
     }
 
     public function packageRegistered(): void
     {
-        $this->app->singleton(ChallengeStorage::class, function () {
-            return match (config('webauthn.storage.driver', 'cache')) {
-                'cache' => new CacheStorage(),
-                'session' => new SessionStorage(),
-                'database' => new DatabaseStorage(),
-                default => throw new \InvalidArgumentException('Invalid WebAuthn storage driver'),
-            };
+        $this->app->singleton(Webauthn::class, function ($app) {
+            return new LaravelWebauthn();
         });
 
-        $this->app->singleton(WebAuthnService::class, function ($app) {
-            return new WebAuthnService($app->make(ChallengeStorage::class));
+        $this->app->singleton(StorageManager::class, function ($app) {
+            return new StorageManager($app);
+        });
+        
+        $this->app->bind(ChallengeStorage::class, function ($app) {
+            return $app->make(StorageManager::class)->driver();
         });
     }
 }

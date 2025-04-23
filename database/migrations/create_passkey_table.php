@@ -11,9 +11,7 @@ return new class extends Migration
         Schema::create('passkeys', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('device_name');
             $table->string('credential_id')->unique();
-            $table->boolean('is_enabled')->default(true);
             $table->json('data');
             $table->timestamps();
         });

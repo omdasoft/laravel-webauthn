@@ -9,12 +9,11 @@ interface ChallengeStorage
 {
     public function store(
         string $challengeId,
-        PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions $options,
-        string $deviceName,
+        PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions|null $options,
         int $ttl
     ): void;
 
-    public function get(string $challengeId): ?array;
+    public function get(string $challengeId): PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions|null;
 
     public function forget(string $challengeId): void;
 }
