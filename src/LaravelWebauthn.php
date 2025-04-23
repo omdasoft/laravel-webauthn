@@ -3,14 +3,15 @@
 namespace Omdasoft\LaravelWebauthn;
 
 use Illuminate\Support\Facades\Auth;
-use Omdasoft\LaravelWebauthn\Models\Passkey;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
+use Omdasoft\LaravelWebauthn\Models\Passkey;
 
 class LaravelWebauthn implements Webauthn
 {
     public static function attestationOptions(): array
     {
         $user = Auth::user();
+
         return Passkey::generateAttestationOptions($user);
     }
 
@@ -28,6 +29,7 @@ class LaravelWebauthn implements Webauthn
     public static function completeAssertion(array $params): ?string
     {
         $user = Auth::user();
+
         return Passkey::completeAssertion($user, $params);
     }
 }

@@ -3,9 +3,9 @@
 namespace Omdasoft\LaravelWebauthn\Repositories;
 
 use Illuminate\Support\Facades\Cache;
-use Webauthn\PublicKeyCredentialRequestOptions;
-use Webauthn\PublicKeyCredentialCreationOptions;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
+use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialRequestOptions;
 
 class CacheStorage implements ChallengeStorage
 {
@@ -13,8 +13,7 @@ class CacheStorage implements ChallengeStorage
         string $challengeId,
         PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions|null $options,
         int $ttl
-    ): void
-    {
+    ): void {
         Cache::put("webauthn_challenge:{$challengeId}", $options, now()->addSeconds($ttl));
     }
 

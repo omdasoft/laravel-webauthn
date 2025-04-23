@@ -1,17 +1,18 @@
-<?php 
+<?php
 
 namespace Omdasoft\LaravelWebauthn\Attestation\Actions;
 
-use Webauthn\PublicKeyCredentialRpEntity;
-use Webauthn\PublicKeyCredentialUserEntity;
+use Illuminate\Contracts\Auth\Authenticatable as User;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\PublicKeyCredentialCreationOptions;
-use Illuminate\Contracts\Auth\Authenticatable as User;
+use Webauthn\PublicKeyCredentialRpEntity;
+use Webauthn\PublicKeyCredentialUserEntity;
 
-class PrepareAttestationCreation {
+class PrepareAttestationCreation
+{
     public function __invoke(User $user): PublicKeyCredentialCreationOptions
     {
-        if (!$user) {
+        if (! $user) {
             throw new \RuntimeException('An authenticated user is required for WebAuthn registration.');
         }
 

@@ -2,24 +2,24 @@
 
 namespace Omdasoft\LaravelWebauthn\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\soft\LaravelWebauthn\Traits\HasWebAuthn;
+use Illuminate\Database\Eloquent\Model;
 use Omdasoft\LaravelWebauthn\Models\Casts\Base64;
 
 class Passkey extends Model
 {
     use HasWebAuthn;
-    
+
     protected $table = 'passkeys';
 
     protected $fillable = [
         'user_id',
         'credential_id',
-        'data'
+        'data',
     ];
 
     protected $casts = [
         'data' => 'array',
-        'credential_id' => Base64::class
+        'credential_id' => Base64::class,
     ];
 }

@@ -1,10 +1,11 @@
-<?php 
+<?php
 
 namespace App\soft\LaravelWebauthn\Assertion\Actions;
 
 use Webauthn\PublicKeyCredentialRequestOptions;
 
-class PrepareAssertionRequest {
+class PrepareAssertionRequest
+{
     public function __invoke(): PublicKeyCredentialRequestOptions
     {
         return new PublicKeyCredentialRequestOptions(

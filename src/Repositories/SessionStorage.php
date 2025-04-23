@@ -3,9 +3,9 @@
 namespace Omdasoft\LaravelWebauthn\Repositories;
 
 use Illuminate\Support\Facades\Session;
-use Webauthn\PublicKeyCredentialRequestOptions;
-use Webauthn\PublicKeyCredentialCreationOptions;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
+use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialRequestOptions;
 
 class SessionStorage implements ChallengeStorage
 {
@@ -13,8 +13,7 @@ class SessionStorage implements ChallengeStorage
         string $challengeId,
         PublicKeyCredentialCreationOptions|PublicKeyCredentialRequestOptions|null $options,
         int $ttl
-    ): void
-    {
+    ): void {
         Session::put("webauthn_challenge:{$challengeId}", $options);
         Session::put("webauthn_challenge_expiry:{$challengeId}", now()->addSeconds($ttl)->timestamp);
     }
@@ -26,6 +25,7 @@ class SessionStorage implements ChallengeStorage
 
         if (Session::has($expiryKey) && now()->timestamp > Session::get($expiryKey)) {
             Session::forget([$key, $expiryKey]);
+
             return null;
         }
 

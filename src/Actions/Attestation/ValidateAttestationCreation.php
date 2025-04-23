@@ -1,13 +1,14 @@
-<?php 
+<?php
 
 namespace Omdasoft\LaravelWebauthn\Attestation\Actions;
 
-use Webauthn\PublicKeyCredentialSource;
 use Webauthn\AuthenticatorAttestationResponse;
-use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\AuthenticatorAttestationResponseValidator;
+use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialSource;
 
-class ValidateAttestationCreation {
+class ValidateAttestationCreation
+{
     public function __invoke(array $challengeArray, AuthenticatorAttestationResponse $response): PublicKeyCredentialSource
     {
         return AuthenticatorAttestationResponseValidator::create()->check(

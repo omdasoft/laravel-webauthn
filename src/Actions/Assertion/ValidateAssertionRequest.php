@@ -1,22 +1,22 @@
-<?php 
+<?php
 
 namespace App\soft\LaravelWebauthn\Assertion\Actions;
 
-use Webauthn\PublicKeyCredentialSource;
 use Psr\Http\Message\ServerRequestInterface;
 use Webauthn\AuthenticatorAssertionResponse;
-use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\AuthenticatorAssertionResponseValidator;
+use Webauthn\PublicKeyCredentialRequestOptions;
+use Webauthn\PublicKeyCredentialSource;
 
-class ValidateAssertionRequest {
+class ValidateAssertionRequest
+{
     public function __invoke(
-        PublicKeyCredentialSource|string $credentialId, 
+        PublicKeyCredentialSource|string $credentialId,
         AuthenticatorAssertionResponse $authenticatorAssertionResponse,
         PublicKeyCredentialRequestOptions $requestOptions,
         ServerRequestInterface|string $request,
         ?string $userHandle
-    ): void
-    {
+    ): void {
         AuthenticatorAssertionResponseValidator::create()->check(
             credentialId: $credentialId,
             authenticatorAssertionResponse: $authenticatorAssertionResponse,
