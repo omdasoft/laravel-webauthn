@@ -1,66 +1,166 @@
-# A web authn package for laravel
+# Laravel WebAuthn
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/omdasoft/laravel-webauthn/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/omdasoft/laravel-webauthn/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/omdasoft/laravel-webauthn/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/omdasoft/laravel-webauthn/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+A Laravel package that adds a simple server-side WebAuthn (passkeys) flow for:
 
-## Support us
+- Attestation (registration)
+- Assertion (login)
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-webauthn.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-webauthn)
+The package provides:
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
+- A service (`Omdasoft\LaravelWebauthn\LaravelWebauthn`) implementing the `Omdasoft\LaravelWebauthn\Contracts\Webauthn` contract
+- A `HasWebAuthn` trait and a `passkeys` table migration
+- Routes + controller endpoints for requesting options and completing registration/login
 
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+## Project status
+
+This package is **in progress** and is **not ready for production use**.
+
+- The API surface (routes, request methods, responses) may change.
+- The current implementation focuses on wiring and integration; you should perform a full security review before using in a real system.
+
+## Requirements
+
+- PHP `^8.3`
+- Laravel `10|11|12`
 
 ## Installation
 
-You can install the package via composer:
+Install the package via Composer:
 
 ```bash
 composer require omdasoft/laravel-webauthn
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="laravel-webauthn-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
+Publish the config and migration:
 
 ```bash
 php artisan vendor:publish --tag="laravel-webauthn-config"
+php artisan vendor:publish --tag="laravel-webauthn-migrations"
 ```
 
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
+Run migrations:
 
 ```bash
-php artisan vendor:publish --tag="laravel-webauthn-views"
+php artisan migrate
 ```
 
-## Usage
+## Configuration
+
+After publishing, you can configure the package in `config/webauthn.php`.
+
+- **`domain`**
+  - The relying party origin / domain used by the WebAuthn ceremony.
+  - Set `WEBAUTHN_DOMAIN` in your `.env`.
+  - Example: `https://example.com`
+
+- **`storage.driver`**
+  - Where challenges are stored.
+  - Supported values:
+    - `cache`
+    - `session`
+
+- **`storage.ttl`**
+  - Challenge time-to-live in seconds.
+
+Example `.env`:
+
+```env
+WEBAUTHN_DOMAIN=https://example.com
+WEBAUTHN_STORAGE_DRIVER=cache
+WEBAUTHN_CHALLENGE_TTL=3600
+```
+
+## Model setup
+
+Add the `HasWebAuthn` trait to your authenticatable user model:
 
 ```php
-$laravelWebauthn = new Omdasoft\LaravelWebauthn();
-echo $laravelWebauthn->echoPhrase('Hello, Omdasoft!');
+use Omdasoft\LaravelWebauthn\Traits\HasWebAuthn;
+
+class User extends Authenticatable
+{
+    use HasWebAuthn;
+}
 ```
 
-## Testing
+This adds a `passkeys()` relationship backed by the `passkeys` table.
+
+## Routes
+
+The package registers the following routes under the `webauthn` prefix:
+
+### Attestation
+
+- `GET /webauthn/register/options` (requires `auth:sanctum`)
+- `GET /webauthn/register` (requires `auth:sanctum`)
+
+### Assertion
+
+- `GET /webauthn/login/options`
+- `GET /webauthn/login`
+
+Note: using `GET` for state-changing actions is not ideal. Consider changing these to `POST` in a future release.
+
+## Endpoints overview
+
+### `GET /webauthn/register/options`
+
+Returns JSON with:
+
+- `challenge_id`
+- `passkey` (PublicKeyCredentialCreationOptions as array)
+
+### `GET /webauthn/register`
+
+Expects:
+
+- `challenge_id` (string)
+- `passkey` (array)
+
+Completes attestation and stores the credential in the authenticated user's `passkeys()` relationship.
+
+### `GET /webauthn/login/options`
+
+Returns JSON with:
+
+- `challenge_id`
+- `passkey` (PublicKeyCredentialRequestOptions as array)
+
+### `GET /webauthn/login`
+
+Expects:
+
+- `challenge_id` (string)
+- `passkey` (array)
+
+Returns JSON with:
+
+- `token` (string)
+
+## Testing and quality
+
+Run the test suite:
 
 ```bash
 composer test
 ```
+
+Run static analysis, formatting check, and tests (recommended for CI):
+
+```bash
+composer ci
+```
+
+## Security notes
+
+WebAuthn is security-sensitive.
+
+- Always serve your app over HTTPS.
+- Ensure `WEBAUTHN_DOMAIN` matches your real origin.
+- Review token issuing (`createToken`) and authentication middleware configuration.
 
 ## Changelog
 
@@ -73,11 +173,6 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 ## Security Vulnerabilities
 
 Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [omdasoft](https://github.com/omdasoft)
-- [All Contributors](../../contributors)
 
 ## License
 
