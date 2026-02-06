@@ -1,6 +1,6 @@
 <?php
 
-namespace Omdasoft\LaravelWebauthn\Attestation\Actions;
+namespace Omdasoft\LaravelWebauthn\Actions\Attestation;
 
 use Illuminate\Contracts\Auth\Authenticatable as User;
 use Webauthn\AuthenticatorSelectionCriteria;
@@ -12,24 +12,28 @@ class PrepareAttestationCreation
 {
     public function __invoke(User $user): PublicKeyCredentialCreationOptions
     {
-        if (! $user) {
-            throw new \RuntimeException('An authenticated user is required for WebAuthn registration.');
-        }
+        /** @phpstan-ignore-next-line */
+        $name = $user->name ?? $user->email ?? 'User';
+        /** @phpstan-ignore-next-line */
+        $id = (string) $user->getAuthIdentifier();
+
+        $rpId = parse_url(config('webauthn.domain'), PHP_URL_HOST);
+        $rpId = $rpId === false ? null : $rpId;
 
         return new PublicKeyCredentialCreationOptions(
             rp: new PublicKeyCredentialRpEntity(
                 name: config('app.name'),
-                id: parse_url(config('webauthn.domain'), PHP_URL_HOST),
+                id: $rpId,
             ),
             user: new PublicKeyCredentialUserEntity(
-                name: $user->name,
-                id: $user->id,
-                displayName: $user->name,
+                name: $name,
+                id: $id,
+                displayName: $name,
             ),
             challenge: random_bytes(32),
             authenticatorSelection: new AuthenticatorSelectionCriteria(
                 userVerification: AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
-                requireResidentKey: true
+                residentKey: AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED
             ),
             attestation: PublicKeyCredentialCreationOptions::ATTESTATION_CONVEYANCE_PREFERENCE_NONE
         );

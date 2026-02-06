@@ -1,8 +1,7 @@
 <?php
 
-namespace App\soft\LaravelWebauthn\Assertion\Actions;
+namespace Omdasoft\LaravelWebauthn\Actions\Assertion;
 
-use Psr\Http\Message\ServerRequestInterface;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\PublicKeyCredentialRequestOptions;
@@ -10,18 +9,22 @@ use Webauthn\PublicKeyCredentialSource;
 
 class ValidateAssertionRequest
 {
+    public function __construct(
+        protected AuthenticatorAssertionResponseValidator $validator
+    ) {}
+
     public function __invoke(
-        PublicKeyCredentialSource|string $credentialId,
+        PublicKeyCredentialSource $credentialSource,
         AuthenticatorAssertionResponse $authenticatorAssertionResponse,
         PublicKeyCredentialRequestOptions $requestOptions,
-        ServerRequestInterface|string $request,
+        string $host,
         ?string $userHandle
-    ): void {
-        AuthenticatorAssertionResponseValidator::create()->check(
-            credentialId: $credentialId,
+    ): PublicKeyCredentialSource {
+        return $this->validator->check(
+            publicKeyCredentialSource: $credentialSource,
             authenticatorAssertionResponse: $authenticatorAssertionResponse,
             publicKeyCredentialRequestOptions: $requestOptions,
-            request: $request,
+            host: $host,
             userHandle: $userHandle
         );
     }

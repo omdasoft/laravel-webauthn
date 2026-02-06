@@ -1,18 +1,24 @@
 <?php
 
-namespace App\soft\LaravelWebauthn\Assertion\Actions;
+namespace Omdasoft\LaravelWebauthn\Actions\Assertion;
 
 use Webauthn\PublicKeyCredentialRequestOptions;
 
 class PrepareAssertionRequest
 {
-    public function __invoke(): PublicKeyCredentialRequestOptions
+    /**
+     * @param  array<int, mixed>  $allowCredentials
+     */
+    public function __invoke(array $allowCredentials = [], string $userVerification = 'preferred'): PublicKeyCredentialRequestOptions
     {
+        $rpId = parse_url(config('webauthn.domain'), PHP_URL_HOST);
+        $rpId = $rpId === false ? null : $rpId;
+
         return new PublicKeyCredentialRequestOptions(
             challenge: random_bytes(32),
-            rpId: parse_url(config('webauthn.domain'), PHP_URL_HOST),
-            allowCredentials: [],
-            userVerification: 'required'
+            rpId: $rpId,
+            allowCredentials: $allowCredentials,
+            userVerification: $userVerification
         );
     }
 }

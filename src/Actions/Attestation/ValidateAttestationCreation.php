@@ -1,6 +1,6 @@
 <?php
 
-namespace Omdasoft\LaravelWebauthn\Attestation\Actions;
+namespace Omdasoft\LaravelWebauthn\Actions\Attestation;
 
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
@@ -9,12 +9,21 @@ use Webauthn\PublicKeyCredentialSource;
 
 class ValidateAttestationCreation
 {
-    public function __invoke(array $challengeArray, AuthenticatorAttestationResponse $response): PublicKeyCredentialSource
+    public function __construct(
+        protected AuthenticatorAttestationResponseValidator $validator
+    ) {}
+
+    public function __invoke(PublicKeyCredentialCreationOptions $options, AuthenticatorAttestationResponse $response): PublicKeyCredentialSource
     {
-        return AuthenticatorAttestationResponseValidator::create()->check(
+        $host = parse_url(config('webauthn.domain'), PHP_URL_HOST);
+        if (!is_string($host) || $host === '') {
+            throw new \RuntimeException('Invalid webauthn.domain configuration');
+        }
+
+        return $this->validator->check(
             $response,
-            PublicKeyCredentialCreationOptions::createFromArray($challengeArray),
-            parse_url(config('webauthn.domain'), PHP_URL_HOST)
+            $options,
+            $host
         );
     }
 }

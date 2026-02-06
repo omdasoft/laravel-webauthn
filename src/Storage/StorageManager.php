@@ -15,7 +15,7 @@ class StorageManager extends Manager
         parent::__construct($app);
     }
 
-    public function getDefaultDriver(): ChallengeStorage
+    public function getDefaultDriver(): string
     {
         return config('webauthn.storage.driver', 'cache');
     }

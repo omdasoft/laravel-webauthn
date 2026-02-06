@@ -1,0 +1,33 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - database
+
+    tmpDir: build/phpstan
+
+    # Octane compatibility checks
+    checkOctaneCompatibility: true
+
+    # Check model properties defined in PHPDoc
+    checkModelProperties: true
+
+    # Don't report errors for ignored patterns that don't match
+    reportUnmatchedIgnoredErrors: false
+
+    # Ignore specific error patterns
+    ignoreErrors:
+        # Mixed type annotations in Laravel context
+        - '#PHPDoc tag @var with type mixed is not subtype of native type#'
+        
+        # String type annotation with json_encode (returns string|false)
+        - '#PHPDoc tag @var with type string is not subtype of native type#'
+        
+        # JsonSerializable interface on WebAuthn objects
+        - '#Call to an undefined method Webauthn\\PublicKeyCredential.*::jsonSerialize\(\)#'
+        
+        # Dynamic model instantiation
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::createToken\(\)#'
+        
+        # Unused trait warning (trait is meant to be used by consumer apps)
+        - '#Trait .* is used zero times and is not analysed#'

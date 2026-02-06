@@ -4,11 +4,24 @@ namespace Omdasoft\LaravelWebauthn\Contracts;
 
 interface Webauthn
 {
-    public static function attestationOptions(): array;
+    /**
+     * @return array{challenge_id: string, passkey: array<string, mixed>}
+     */
+    public function attestationOptions(\Illuminate\Contracts\Auth\Authenticatable $user): array;
 
-    public static function completeAttestation(array $params): void;
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    public function completeAttestation(\Illuminate\Contracts\Auth\Authenticatable $user, array $params): void;
 
-    public static function assertionOptions(): array;
+    /**
+     * @return array{challenge_id: string, passkey: array<string, mixed>}
+     */
+    public function assertionOptions(): array;
 
-    public static function completeAssertion(array $params): ?string;
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array{token: string}
+     */
+    public function completeAssertion(array $params): array; // Returns token or status
 }
