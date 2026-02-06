@@ -3,7 +3,10 @@
 namespace Omdasoft\LaravelWebauthn\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Omdasoft\LaravelWebauthn\LaravelWebauthnServiceProvider;
+use Omdasoft\LaravelWebauthn\Tests\Fixtures\User;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
@@ -27,11 +30,24 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+        config()->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
 
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
+        config()->set('auth.providers.users.model', User::class);
+
+        Schema::dropAllTables();
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->nullable();
+            $table->string('email')->unique()->nullable();
+            $table->string('password')->nullable();
+            $table->timestamps();
+        });
+
+        (include __DIR__.'/../database/migrations/create_passkey_table.php')->up();
     }
 }

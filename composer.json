@@ -22,7 +22,7 @@
         "phpdocumentor/reflection-docblock": "^5.6",
         "symfony/property-access": "^7.2",
         "symfony/serializer": "^7.2",
-        "web-auth/webauthn-lib": "4.9"
+        "web-auth/webauthn-lib": "5.2.3"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
@@ -52,9 +52,15 @@
         "post-autoload-dump": "@composer run prepare",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
-        "format": "vendor/bin/pint"
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-text",
+        "format": "vendor/bin/pint",
+        "lint": "vendor/bin/pint --test",
+        "ci": [
+            "@analyse",
+            "@lint",
+            "@test"
+        ]
     },
     "config": {
         "sort-packages": true,
