@@ -3,16 +3,19 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
 [![Total Downloads](https://img.shields.io/packagist/dt/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
 
-A Laravel package that adds a simple server-side WebAuthn (passkeys) flow for:
+A Laravel package that provides a **backend API implementation** for WebAuthn (passkeys) authentication, designed for **API-first applications** with separate frontends.
 
-- Attestation (registration)
-- Assertion (login)
+Perfect for:
+- Single Page Applications (SPAs)
+- Mobile applications
+- Headless Laravel setups
 
 The package provides:
 
-- A service (`Omdasoft\LaravelWebauthn\LaravelWebauthn`) implementing the `Omdasoft\LaravelWebauthn\Contracts\Webauthn` contract
+- **API-only WebAuthn endpoints** - No views included, pure JSON API
+- A service (`Omdasoft\LaravelWebauthn\LaravelWebauthn`) implementing `Omdasoft\LaravelWebauthn\Contracts\Webauthn` contract
 - A `HasWebAuthn` trait and a `passkeys` table migration
-- Routes + controller endpoints for requesting options and completing registration/login
+- Configurable API routes with proper middleware for secure authentication
 
 ## Project status
 
@@ -56,6 +59,11 @@ After publishing, you can configure the package in `config/webauthn.php`.
   - Set `WEBAUTHN_DOMAIN` in your `.env`.
   - Example: `https://example.com`
 
+- **`route_prefix`**
+  - The API route prefix for WebAuthn endpoints.
+  - Set `WEBAUTHN_ROUTE_PREFIX` in your `.env`.
+  - Default: `api/webauthn`
+
 - **`storage.driver`**
   - Where challenges are stored.
   - Supported values:
@@ -69,6 +77,7 @@ Example `.env`:
 
 ```env
 WEBAUTHN_DOMAIN=https://example.com
+WEBAUTHN_ROUTE_PREFIX=api/webauthn
 WEBAUTHN_STORAGE_DRIVER=cache
 WEBAUTHN_CHALLENGE_TTL=3600
 ```
@@ -88,32 +97,40 @@ class User extends Authenticatable
 
 This adds a `passkeys()` relationship backed by the `passkeys` table.
 
-## Routes
+## API Routes
 
-The package registers the following routes under the `webauthn` prefix:
+The package registers the following API routes under your configured prefix (default: `api/webauthn`):
 
-### Attestation
+### Registration (Attestation)
 
-- `GET /webauthn/register/options` (requires `auth:sanctum`)
-- `GET /webauthn/register` (requires `auth:sanctum`)
+- `POST /api/webauthn/register/options` (requires `auth:sanctum`)
+- `POST /api/webauthn/register` (requires `auth:sanctum`)
 
-### Assertion
+### Login (Assertion)
 
-- `GET /webauthn/login/options`
-- `GET /webauthn/login`
+- `POST /api/webauthn/login/options`
+- `POST /api/webauthn/login`
 
-Note: using `GET` for state-changing actions is not ideal. Consider changing these to `POST` in a future release.
+### Custom Routes
 
-## Endpoints overview
+You can override the routes by publishing them:
 
-### `GET /webauthn/register/options`
+```bash
+php artisan vendor:publish --tag="laravel-webauthn-routes"
+```
+
+This will publish the routes file to `routes/webauthn.php` where you can customize them as needed.
+
+## API Endpoints
+
+### `POST /api/webauthn/register/options`
 
 Returns JSON with:
 
 - `challenge_id`
 - `passkey` (PublicKeyCredentialCreationOptions as array)
 
-### `GET /webauthn/register`
+### `POST /api/webauthn/register`
 
 Expects:
 
@@ -122,14 +139,14 @@ Expects:
 
 Completes attestation and stores the credential in the authenticated user's `passkeys()` relationship.
 
-### `GET /webauthn/login/options`
+### `POST /api/webauthn/login/options`
 
 Returns JSON with:
 
 - `challenge_id`
 - `passkey` (PublicKeyCredentialRequestOptions as array)
 
-### `GET /webauthn/login`
+### `POST /api/webauthn/login`
 
 Expects:
 
