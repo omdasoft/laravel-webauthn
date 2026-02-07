@@ -28,7 +28,7 @@ class WebauthnRoutesTest extends TestCase
 
         $this->withoutMiddleware()
             ->actingAs($user)
-            ->getJson('/webauthn/register/options')
+            ->postJson('/api/webauthn/register/options')
             ->assertOk()
             ->assertJson([
                 'challenge_id' => 'challenge-1',
@@ -56,7 +56,7 @@ class WebauthnRoutesTest extends TestCase
 
         $this->withoutMiddleware()
             ->actingAs($user)
-            ->json('GET', '/webauthn/register', [
+            ->postJson('/api/webauthn/register', [
                 'challenge_id' => 'challenge-2',
                 'passkey' => ['a' => 'b'],
             ])
@@ -74,7 +74,7 @@ class WebauthnRoutesTest extends TestCase
             ],
         ]));
 
-        $this->getJson('/webauthn/login/options')
+        $this->postJson('/api/webauthn/login/options')
             ->assertOk()
             ->assertJson([
                 'challenge_id' => 'challenge-3',
@@ -92,7 +92,7 @@ class WebauthnRoutesTest extends TestCase
             ->willReturn(['token' => 'token-123']);
         $this->app->instance(Webauthn::class, $mock);
 
-        $this->json('GET', '/webauthn/login', [
+        $this->postJson('/api/webauthn/login', [
             'challenge_id' => 'challenge-4',
             'passkey' => ['p' => 'q'],
         ])

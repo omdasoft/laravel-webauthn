@@ -25,9 +25,16 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
             ->name('laravel-webauthn')
             ->hasConfigFile('webauthn')
             ->hasViews()
-            ->hasRoute('routes')
+            ->hasRoute('api')
             ->hasMigration('create_passkey_table')
             ->hasCommand(LaravelWebauthnCommand::class);
+    }
+
+    public function packageBooted(): void
+    {
+        $this->publishes([
+            __DIR__.'/../routes/api.php' => base_path('routes/webauthn.php'),
+        ], 'laravel-webauthn-routes');
     }
 
     public function packageRegistered(): void
