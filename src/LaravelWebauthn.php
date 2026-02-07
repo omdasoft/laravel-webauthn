@@ -179,6 +179,9 @@ class LaravelWebauthn implements Webauthn
         return ['token' => $token];
     }
 
+    /**
+     * Generate a unique challenge ID for storing the challenge options.
+     */
     protected function generateUniqueChallengeId(): string
     {
         return base64_encode(random_bytes(32));

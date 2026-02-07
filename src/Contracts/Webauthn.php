@@ -2,12 +2,14 @@
 
 namespace Omdasoft\LaravelWebauthn\Contracts;
 
+use Illuminate\Contracts\Auth\Authenticatable;
+
 interface Webauthn
 {
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}
      */
-    public function attestationOptions(\Illuminate\Contracts\Auth\Authenticatable $user): array;
+    public function attestationOptions(Authenticatable $user): array;
 
     /**
      * @param  array<string, mixed>  $params
