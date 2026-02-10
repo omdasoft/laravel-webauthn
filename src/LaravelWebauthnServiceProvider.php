@@ -2,7 +2,6 @@
 
 namespace Omdasoft\LaravelWebauthn;
 
-use Omdasoft\LaravelWebauthn\Commands\LaravelWebauthnCommand;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
 use Omdasoft\LaravelWebauthn\Repositories\EloquentPublicKeyCredentialSourceRepository;
@@ -24,10 +23,8 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-webauthn')
             ->hasConfigFile('webauthn')
-            ->hasViews()
             ->hasRoute('api')
-            ->hasMigration('create_passkey_table')
-            ->hasCommand(LaravelWebauthnCommand::class);
+            ->hasMigration('create_passkey_table');
     }
 
     public function packageBooted(): void
