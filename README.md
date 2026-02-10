@@ -40,8 +40,7 @@ composer require omdasoft/laravel-webauthn
 Publish the config and migration:
 
 ```bash
-php artisan vendor:publish --tag="laravel-webauthn-config"
-php artisan vendor:publish --tag="laravel-webauthn-migrations"
+php artisan vendor:publish --provider="Omdasoft\LaravelWebauthn\LaravelWebauthnServiceProvider"
 ```
 
 Run migrations:
