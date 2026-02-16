@@ -54,7 +54,7 @@ return [
      */
     'relying_party' => [
         'name' => env('WEBAUTHN_RELYING_PARTY_NAME', config('app.name')),
-        'id' => env('WEBAUTHN_RELAYING_PARTY_ID', parse_url(config('app.url'), PHP_URL_HOST)),
+        'id' => env('WEBAUTHN_RELYING_PARTY_ID', parse_url(config('app.url'), PHP_URL_HOST)),
         'icon' => null,
     ],
 ];

@@ -12,10 +12,12 @@ Perfect for:
 
 The package provides:
 
-- **API-only WebAuthn endpoints** - No views included, pure JSON API
-- A service (`Omdasoft\LaravelWebauthn\LaravelWebauthn`) implementing `Omdasoft\LaravelWebauthn\Contracts\Webauthn` contract
-- A `HasWebAuthn` trait and a `passkeys` table migration
-- Configurable API routes with proper middleware for secure authentication
+- **API-only WebAuthn endpoints** - Pure JSON API suitable for SPAs and mobile apps.
+- **Action-based architecture** - Core logic is separated into dedicated Action classes for easy customization.
+- **Configurable models** - Support for custom Passkey and User models.
+- **Event-driven** - Dispatches `WebauthnLogin` upon successful authentication.
+- **InteractWithPasskeys trait** - Easy integration with your User (Authenticatable) model.
+- **Configurable API routes** - Customizable prefix and middleware support.
 
 ## Project status
 
@@ -53,14 +55,18 @@ php artisan migrate
 
 After publishing, you can configure the package in `config/webauthn.php`.
 
-- **`domain`**
-  - The relying party origin / domain used by the WebAuthn ceremony.
-  - Set `WEBAUTHN_DOMAIN` in your `.env`.
-  - Example: `https://example.com`
+- **`relying_party.id`**
+  - The relying party ID used for WebAuthn (usually the domain without protocol).
+  - Set `WEBAUTHN_RELYING_PARTY_ID` in your `.env`.
+  - Example: `example.com`
 
-- **`middlewares`**
-  - The middleware used for WebAuthn routes.
-  - Default: `register` uses `auth:sanctum`, `login` is empty.
+- **`models.passkey`**
+  - The model class used for storing passkeys.
+  - Default: `Omdasoft\LaravelWebauthn\Models\Passkey`
+
+- **`models.authenticatable`**
+  - Your application's user model class.
+  - Default: `App\Models\User`
 
 - **`actions.handle_login`**
   - The class that handles user login after successful WebAuthn assertion.
@@ -69,7 +75,8 @@ After publishing, you can configure the package in `config/webauthn.php`.
 Example `.env`:
 
 ```env
-WEBAUTHN_DOMAIN=https://example.com
+WEBAUTHN_RELYING_PARTY_ID=example.com
+WEBAUTHN_RELYING_PARTY_NAME="My Awesome App"
 WEBAUTHN_ROUTE_PREFIX=api/webauthn
 WEBAUTHN_STORAGE_DRIVER=cache
 WEBAUTHN_CHALLENGE_TTL=3600
@@ -158,14 +165,15 @@ If you are building an Inertia.js application or a standard Blade app, you usual
 
 ## Model setup
 
-Add the `HasWebAuthn` trait to your authenticatable user model:
+Add the `InteractWithPasskeys` trait to your authenticatable user model:
 
 ```php
-use Omdasoft\LaravelWebauthn\Traits\HasWebAuthn;
+use Omdasoft\LaravelWebauthn\Traits\InteractWithPasskeys;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasWebAuthn;
+    use InteractWithPasskeys;
 }
 ```
 
@@ -228,7 +236,23 @@ Expects:
 
 Returns JSON with:
 
-- `token` (string)
+- `token` (string) - If using `HandleSanctumLogin`.
+
+### Events
+
+The package dispatches the following events:
+
+- `Omdasoft\LaravelWebauthn\Events\WebauthnLogin`: Dispatched after a user successfully logs in via passkey.
+
+```php
+use Omdasoft\LaravelWebauthn\Events\WebauthnLogin;
+
+// In your EventServiceProvider or dedicated listener
+public function handle(WebauthnLogin $event)
+{
+    // $event->user is the authenticated user
+}
+```
 
 ## Testing and quality
 
