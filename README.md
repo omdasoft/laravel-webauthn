@@ -165,13 +165,14 @@ If you are building an Inertia.js application or a standard Blade app, you usual
 
 ## Model setup
 
-Add the `InteractWithPasskeys` trait to your authenticatable user model:
+Add the `InteractWithPasskeys` trait and `HasPasskey` contract to your authenticatable user model:
 
 ```php
+use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
 use Omdasoft\LaravelWebauthn\Traits\InteractWithPasskeys;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasPasskey
 {
     use InteractWithPasskeys;
 }
