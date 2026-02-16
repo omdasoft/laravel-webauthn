@@ -2,6 +2,7 @@
 
 namespace Omdasoft\LaravelWebauthn\Actions\Attestation;
 
+use Omdasoft\LaravelWebauthn\Support\Config;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
 use Webauthn\PublicKeyCredentialCreationOptions;
@@ -15,15 +16,10 @@ class ValidateAttestationCreation
 
     public function __invoke(PublicKeyCredentialCreationOptions $options, AuthenticatorAttestationResponse $response): PublicKeyCredentialSource
     {
-        $host = parse_url(config('webauthn.domain'), PHP_URL_HOST);
-        if (!is_string($host) || $host === '') {
-            throw new \RuntimeException('Invalid webauthn.domain configuration');
-        }
-
         return $this->validator->check(
             $response,
             $options,
-            $host
+            Config::relyingPartyId()
         );
     }
 }

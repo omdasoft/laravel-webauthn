@@ -3,11 +3,12 @@
 namespace Omdasoft\LaravelWebauthn\Tests\Fixtures;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Omdasoft\LaravelWebauthn\Traits\HasWebAuthn;
+use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
+use Omdasoft\LaravelWebauthn\Traits\InteractWithPasskeys;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasPasskey
 {
-    use HasWebAuthn;
+    use InteractWithPasskeys;
 
     protected $table = 'users';
 

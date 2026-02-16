@@ -58,19 +58,13 @@ After publishing, you can configure the package in `config/webauthn.php`.
   - Set `WEBAUTHN_DOMAIN` in your `.env`.
   - Example: `https://example.com`
 
-- **`route_prefix`**
-  - The API route prefix for WebAuthn endpoints.
-  - Set `WEBAUTHN_ROUTE_PREFIX` in your `.env`.
-  - Default: `api/webauthn`
+- **`middlewares`**
+  - The middleware used for WebAuthn routes.
+  - Default: `register` uses `auth:sanctum`, `login` is empty.
 
-- **`storage.driver`**
-  - Where challenges are stored.
-  - Supported values:
-    - `cache`
-    - `session`
-
-- **`storage.ttl`**
-  - Challenge time-to-live in seconds.
+- **`actions.handle_login`**
+  - The class that handles user login after successful WebAuthn assertion.
+  - Default: `Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin`
 
 Example `.env`:
 
@@ -80,6 +74,87 @@ WEBAUTHN_ROUTE_PREFIX=api/webauthn
 WEBAUTHN_STORAGE_DRIVER=cache
 WEBAUTHN_CHALLENGE_TTL=3600
 ```
+
+## Flexibility and Custom Auth
+
+This package is designed to be flexible. You can use it with Sanctum (default), Session, JWT, or any other authentication system.
+
+### Customizing Middleware
+
+Update your `config/webauthn.php`:
+
+```php
+'middlewares' => [
+    'register' => ['auth:sanctum'], // Protect registration
+    'login' => [], // Usually public
+],
+```
+
+### Customizing Login Logic
+
+If you don't use Sanctum, create a class that implements `HandleLoginAction`:
+
+```php
+namespace App\Actions;
+
+use Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Auth;
+
+class SessionLoginHandler implements HandleLoginAction
+{
+    public function execute(Authenticatable $user): array
+    {
+        Auth::login($user);
+        return ['status' => 'success'];
+    }
+}
+```
+
+Then register it in `config/webauthn.php`:
+
+```php
+'actions' => [
+    'handle_login' => \App\Actions\SessionLoginHandler::class,
+],
+```
+
+### Manual Route Registration
+
+Register routes in your `routes/api.php` or `routes/web.php`:
+
+```php
+Route::webauthn();
+```
+
+Or with a custom prefix:
+
+```php
+Route::webauthn('auth/passkeys'); 
+```
+
+### Usage with Inertia or Web Sessions
+
+If you are building an Inertia.js application or a standard Blade app, you usually want the routes to be in the `web` middleware group to handle cookies and CSRF.
+
+1.  **Register routes manually** in `routes/web.php`:
+    ```php
+    // This will use the 'web' middleware group by default
+    Route::middleware(['web'])->group(function () {
+        Route::webauthn('auth/passkeys'); 
+    });
+    ```
+
+3.  **Configure for Sessions** in `config/webauthn.php`:
+    ```php
+    'middlewares' => [
+        'register' => ['auth'], // Use standard web auth
+        'login' => [],
+    ],
+    'actions' => [
+        'handle_login' => \App\Actions\SessionLoginHandler::class, // Your custom handler
+    ],
+    ```
 
 ## Model setup
 
@@ -112,13 +187,12 @@ The package registers the following API routes under your configured prefix (def
 
 ### Custom Routes
 
-You can override the routes by publishing them:
+If you need full control over the routes, you can define them manually instead of using `Route::webauthn()`:
 
-```bash
-php artisan vendor:publish --tag="laravel-webauthn-routes"
+```php
+Route::post('register/options', [\Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController::class, 'registerOptions'])->name('webauthn.register.options');
+// ...
 ```
-
-This will publish the routes file to `routes/webauthn.php` where you can customize them as needed.
 
 ## API Endpoints
 

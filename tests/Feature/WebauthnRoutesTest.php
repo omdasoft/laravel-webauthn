@@ -2,7 +2,6 @@
 
 namespace Omdasoft\LaravelWebauthn\Tests\Feature;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
 use Omdasoft\LaravelWebauthn\Tests\Fixtures\User;
 use Omdasoft\LaravelWebauthn\Tests\TestCase;
@@ -49,7 +48,6 @@ class WebauthnRoutesTest extends TestCase
         $mock->expects($this->once())
             ->method('completeAttestation')
             ->with(
-                $this->isInstanceOf(Authenticatable::class),
                 ['challenge_id' => 'challenge-2', 'passkey' => ['a' => 'b']]
             );
         $this->app->instance(Webauthn::class, $mock);
@@ -85,19 +83,42 @@ class WebauthnRoutesTest extends TestCase
     #[Test]
     public function user_can_login(): void
     {
+        \Illuminate\Support\Facades\Event::fake();
+
+        $user = User::query()->create([
+            'name' => 'Test',
+            'email' => 'login@example.com',
+            'password' => 'secret',
+        ]);
+
         $mock = $this->createMock(Webauthn::class);
         $mock->expects($this->once())
             ->method('completeAssertion')
             ->with(['challenge_id' => 'challenge-4', 'passkey' => ['p' => 'q']])
-            ->willReturn(['token' => 'token-123']);
+            ->willReturn($user);
         $this->app->instance(Webauthn::class, $mock);
+
+        // Mock the action to avoid needing Sanctum setup in this test
+        $this->app->bind(\Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin::class, function () {
+            return new class implements \Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction
+            {
+                public function execute(\Illuminate\Contracts\Auth\Authenticatable $user): array
+                {
+                    return ['token' => 'mocked-token'];
+                }
+            };
+        });
 
         $this->postJson('/api/webauthn/login', [
             'challenge_id' => 'challenge-4',
             'passkey' => ['p' => 'q'],
         ])
             ->assertOk()
-            ->assertJson(['token' => 'token-123']);
+            ->assertJson(['token' => 'mocked-token']);
+
+        \Illuminate\Support\Facades\Event::assertDispatched(\Omdasoft\LaravelWebauthn\Events\WebauthnLogin::class, function ($event) use ($user) {
+            return $event->user->is($user);
+        });
     }
 
     /**

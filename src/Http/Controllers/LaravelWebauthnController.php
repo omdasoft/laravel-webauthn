@@ -5,8 +5,9 @@ namespace Omdasoft\LaravelWebauthn\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
-use Omdasoft\LaravelWebauthn\Http\Requests\RegisterRequest;
+use Omdasoft\LaravelWebauthn\Events\WebauthnLogin;
 
 class LaravelWebauthnController extends Controller
 {
@@ -16,17 +17,22 @@ class LaravelWebauthnController extends Controller
 
     public function registerOptions(Request $request): JsonResponse
     {
-        $options = $this->webauthn->attestationOptions($request->user());
+        $options = $this->webauthn->attestationOptions();
 
         return response()->json($options);
     }
 
-    public function register(RegisterRequest $request): void
+    public function register(Request $request): void
     {
-        $this->webauthn->completeAttestation($request->user(), $request->validated());
+        $validated = $request->validate([
+            'challenge_id' => 'required|string',
+            'passkey' => 'required|array',
+        ]);
+
+        $this->webauthn->completeAttestation($validated);
     }
 
-    public function loginOptions(): JsonResponse
+    public function loginOptions(Request $request): JsonResponse
     {
         $options = $this->webauthn->assertionOptions();
 
@@ -35,13 +41,24 @@ class LaravelWebauthnController extends Controller
 
     public function login(Request $request): JsonResponse
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'challenge_id' => 'required|string',
             'passkey' => 'required|array',
         ]);
 
-        $result = $this->webauthn->completeAssertion($data);
+        $user = $this->webauthn->completeAssertion($validated);
 
-        return response()->json($result);
+        WebauthnLogin::dispatch($user);
+
+        $handlerClass = config('webauthn.actions.handle_login');
+
+        if ($handlerClass) {
+            /** @var HandleLoginAction $handler */
+            $handler = app($handlerClass);
+
+            return response()->json($handler->execute($user));
+        }
+
+        return response()->json(['status' => 'success']);
     }
 }

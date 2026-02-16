@@ -2,15 +2,19 @@
 
 namespace Omdasoft\LaravelWebauthn\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Omdasoft\LaravelWebauthn\Models\Casts\Base64;
+use Omdasoft\LaravelWebauthn\Support\Config;
+use Omdasoft\LaravelWebauthn\Support\Serializer;
+use Webauthn\PublicKeyCredentialSource;
 
 /**
  * @property int $id
  * @property int $user_id
  * @property string $credential_id
- * @property array<string, mixed> $data
+ * @property \Webauthn\PublicKeyCredentialSource $data
  * @property \Illuminate\Contracts\Auth\Authenticatable $user
  */
 class Passkey extends Model
@@ -24,18 +28,38 @@ class Passkey extends Model
     ];
 
     protected $casts = [
-        'data' => 'array',
         'credential_id' => Base64::class,
     ];
 
     /**
      * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
      */
-    public function user(): BelongsTo
+    public function authenticatable(): BelongsTo
     {
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
-        $userModel = config('auth.providers.users.model');
+        $authenticatableModel = Config::getAuthenticatableModel();
 
-        return $this->belongsTo($userModel);
+        return $this->belongsTo($authenticatableModel);
+    }
+
+    /**
+     * @return Attribute<PublicKeyCredentialSource, PublicKeyCredentialSource>
+     */
+    public function data(): Attribute
+    {
+        $serializer = Serializer::make();
+
+        return new Attribute(
+            get: fn (string $value) => $serializer->fromJson(
+                $value,
+                PublicKeyCredentialSource::class,
+            ),
+            /**
+             * @param  PublicKeyCredentialSource  $value
+             * @return array{credential_id: string, data: string}
+             */
+            set: fn (PublicKeyCredentialSource $value) => [
+                'data' => $serializer->toJson($value),
+            ],
+        );
     }
 }

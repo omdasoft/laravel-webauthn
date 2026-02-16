@@ -3,6 +3,7 @@
 namespace Omdasoft\LaravelWebauthn;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 use InvalidArgumentException;
 use Omdasoft\LaravelWebauthn\Actions\Assertion\PrepareAssertionRequest;
@@ -11,9 +12,10 @@ use Omdasoft\LaravelWebauthn\Actions\Attestation\PrepareAttestationCreation;
 use Omdasoft\LaravelWebauthn\Actions\Attestation\ValidateAttestationCreation;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
-use Omdasoft\LaravelWebauthn\Repositories\EloquentPublicKeyCredentialSourceRepository;
+use Omdasoft\LaravelWebauthn\Support\Config;
+use Omdasoft\LaravelWebauthn\Support\Serializer;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
-use Symfony\Component\Serializer\SerializerInterface;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\PublicKeyCredential;
@@ -22,42 +24,32 @@ class LaravelWebauthn implements Webauthn
 {
     public function __construct(
         protected ChallengeStorage $storage,
-        protected PrepareAttestationCreation $prepareAttestation,
-        protected ValidateAttestationCreation $validateAttestation,
-        protected PrepareAssertionRequest $prepareAssertion,
-        protected ValidateAssertionRequest $validateAssertion,
-        protected SerializerInterface $serializer,
-        protected EloquentPublicKeyCredentialSourceRepository $repository,
     ) {}
 
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}
      */
-    public function attestationOptions(Authenticatable $user): array
+    public function attestationOptions(): array
     {
-        $options = ($this->prepareAttestation)($user);
-
-        $passkeyJson = json_encode($options);
-        if ($passkeyJson === false) {
-            throw new RuntimeException('Unable to encode attestation options');
-        }
+        $options = app(PrepareAttestationCreation::class)();
 
         $challengeId = $this->generateUniqueChallengeId();
 
-        $this->storage->store($challengeId, $options, config('webauthn.storage.ttl', 3600));
+        $this->storage->store($challengeId, $options, Config::storageTTL());
 
         return [
             'challenge_id' => $challengeId,
-            'passkey' => json_decode($passkeyJson, true),
+            'passkey' => Serializer::make()->toArray($options),
         ];
     }
 
     /**
      * @param  array<string, mixed>  $params
      */
-    public function completeAttestation(Authenticatable $user, array $params): void
+    public function completeAttestation(array $params): void
     {
         $challengeId = $params['challenge_id'] ?? null;
+
         if (!$challengeId) {
             throw new InvalidArgumentException('Challenge ID is required');
         }
@@ -71,21 +63,24 @@ class LaravelWebauthn implements Webauthn
             throw new RuntimeException('Invalid challenge options for attestation');
         }
 
-        $json = json_encode($params['passkey']);
-        if ($json === false) {
-            throw new RuntimeException('Unable to encode passkey');
-        }
-        $publicKeyCredential = $this->serializer->deserialize($json, PublicKeyCredential::class, 'json');
+        $publicKeyCredential = Serializer::make()->fromArray($params['passkey'], PublicKeyCredential::class);
         $response = $publicKeyCredential->response;
 
         if (!$response instanceof AuthenticatorAttestationResponse) {
             throw new RuntimeException('Invalid response type for attestation');
         }
 
-        $source = ($this->validateAttestation)($storedOptions, $response);
+        $source = app(ValidateAttestationCreation::class)($storedOptions, $response);
+
+        /** @var \Illuminate\Contracts\Auth\Authenticatable|null $user */
+        $user = Request::user();
+
+        if (!$user) {
+            throw new RuntimeException('User must be authenticated to register a passkey.');
+        }
 
         if (!method_exists($user, 'passkeys')) {
-            throw new RuntimeException('The user model must use the HasWebAuthn trait.');
+            throw new RuntimeException('The passkey relationship is missing on the user model.');
         }
 
         $user->passkeys()->create([
@@ -101,15 +96,11 @@ class LaravelWebauthn implements Webauthn
      */
     public function assertionOptions(): array
     {
-        $options = ($this->prepareAssertion)();
-
-        $passkeyJson = json_encode($options);
-        if ($passkeyJson === false) {
-            throw new RuntimeException('Unable to encode assertion options');
-        }
+        $options = app(PrepareAssertionRequest::class)();
+        $passkeyJson = Serializer::make()->toJson($options);
         $challengeId = $this->generateUniqueChallengeId();
 
-        $this->storage->store($challengeId, $options, config('webauthn.storage.ttl', 3600));
+        $this->storage->store($challengeId, $options, Config::storageTTL());
 
         return [
             'challenge_id' => $challengeId,
@@ -119,9 +110,8 @@ class LaravelWebauthn implements Webauthn
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array{token: string}
      */
-    public function completeAssertion(array $params): array
+    public function completeAssertion(array $params): Authenticatable
     {
         $challengeId = $params['challenge_id'] ?? null;
         if (!$challengeId) {
@@ -137,46 +127,41 @@ class LaravelWebauthn implements Webauthn
             throw new RuntimeException('Invalid challenge options for assertion');
         }
 
-        $json = json_encode($params['passkey']);
-        if ($json === false) {
-            throw new RuntimeException('Unable to encode passkey');
-        }
-        $publicKeyCredential = $this->serializer->deserialize($json, PublicKeyCredential::class, 'json');
+        $publicKeyCredential = Serializer::make()->fromArray($params['passkey'], PublicKeyCredential::class);
         $response = $publicKeyCredential->response;
 
         if (!$response instanceof AuthenticatorAssertionResponse) {
             throw new RuntimeException('Invalid response type for assertion');
         }
 
-        $credentialId = $publicKeyCredential->rawId;
-
-        $source = $this->repository->findOneByCredentialId($credentialId);
-        if (!$source) {
+        $passkey = $this->getPublickeyCredentialSource($publicKeyCredential->rawId);
+        if (!$passkey) {
             throw new RuntimeException('Passkey not found');
         }
 
+        /** @var \Webauthn\PublicKeyCredentialSource $source */
+        $source = $passkey->getAttribute('data');
+
         /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
-        $userModel = config('auth.providers.users.model');
+        $userModel = Config::getAuthenticatableModel();
         $user = $userModel::find($source->userHandle);
 
         if (!$user) {
             throw new RuntimeException('User not found');
         }
 
-        ($this->validateAssertion)(
+        /** @var Authenticatable $user */
+        app(ValidateAssertionRequest::class)(
             $source,
             $response,
             $storedOptions,
-            Request::instance()->getHost(),
+            Config::relyingPartyId(),
             $source->userHandle
         );
 
         $this->storage->forget($challengeId);
 
-        /** @phpstan-ignore-next-line */
-        $token = $user->createToken('webauthn-login')->plainTextToken;
-
-        return ['token' => $token];
+        return $user;
     }
 
     /**
@@ -185,5 +170,16 @@ class LaravelWebauthn implements Webauthn
     protected function generateUniqueChallengeId(): string
     {
         return base64_encode(random_bytes(32));
+    }
+
+    /**
+     * Get the public key credential source from the database.
+     */
+    protected function getPublickeyCredentialSource(string $credentialId): ?Model
+    {
+        /** @var class-string<\Omdasoft\LaravelWebauthn\Models\Passkey> $passkeyModel */
+        $passkeyModel = Config::getPassKeyModel();
+
+        return $passkeyModel::query()->where('credential_id', Base64UrlSafe::encode($credentialId))->first();
     }
 }

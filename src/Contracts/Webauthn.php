@@ -2,19 +2,17 @@
 
 namespace Omdasoft\LaravelWebauthn\Contracts;
 
-use Illuminate\Contracts\Auth\Authenticatable;
-
 interface Webauthn
 {
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}
      */
-    public function attestationOptions(Authenticatable $user): array;
+    public function attestationOptions(): array;
 
     /**
      * @param  array<string, mixed>  $params
      */
-    public function completeAttestation(\Illuminate\Contracts\Auth\Authenticatable $user, array $params): void;
+    public function completeAttestation(array $params): void;
 
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}
@@ -23,7 +21,6 @@ interface Webauthn
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array{token: string}
      */
-    public function completeAssertion(array $params): array; // Returns token or status
+    public function completeAssertion(array $params): \Illuminate\Contracts\Auth\Authenticatable;
 }

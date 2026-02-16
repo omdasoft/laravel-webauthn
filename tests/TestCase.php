@@ -4,6 +4,7 @@ namespace Omdasoft\LaravelWebauthn\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Omdasoft\LaravelWebauthn\LaravelWebauthnServiceProvider;
 use Omdasoft\LaravelWebauthn\Tests\Fixtures\User;
@@ -11,6 +12,11 @@ use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
+    protected function defineRoutes($router)
+    {
+        Route::webauthn();
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,6 +43,7 @@ class TestCase extends Orchestra
         ]);
 
         config()->set('auth.providers.users.model', User::class);
+        config()->set('webauthn.models.authenticatable', User::class);
 
         Schema::dropAllTables();
 

@@ -2,7 +2,9 @@
 
 namespace Omdasoft\LaravelWebauthn\Actions\Attestation;
 
-use Illuminate\Contracts\Auth\Authenticatable as User;
+use Illuminate\Support\Str;
+use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
+use Omdasoft\LaravelWebauthn\Support\Config;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
@@ -10,27 +12,26 @@ use Webauthn\PublicKeyCredentialUserEntity;
 
 class PrepareAttestationCreation
 {
-    public function __invoke(User $user): PublicKeyCredentialCreationOptions
+    public function __invoke(): PublicKeyCredentialCreationOptions
     {
-        /** @phpstan-ignore-next-line */
-        $name = $user->name ?? $user->email ?? 'User';
-        /** @phpstan-ignore-next-line */
-        $id = (string) $user->getAuthIdentifier();
+        /** @var HasPasskey|null $user */
+        $user = request()->user();
 
-        $rpId = parse_url(config('webauthn.domain'), PHP_URL_HOST);
-        $rpId = $rpId === false ? null : $rpId;
+        if (!$user) {
+            throw new \RuntimeException('User must be authenticated for attestation.');
+        }
 
         return new PublicKeyCredentialCreationOptions(
             rp: new PublicKeyCredentialRpEntity(
-                name: config('app.name'),
-                id: $rpId,
+                name: Config::relyingPartyName(),
+                id: Config::relyingPartyId(),
             ),
             user: new PublicKeyCredentialUserEntity(
-                name: $name,
-                id: $id,
-                displayName: $name,
+                name: $user->getPasskeyName(),
+                id: (string) $user->getPasskeyIdentifier(),
+                displayName: $user->getPasskeyDisplayName(),
             ),
-            challenge: random_bytes(32),
+            challenge: Str::random(32),
             authenticatorSelection: new AuthenticatorSelectionCriteria(
                 userVerification: AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
                 residentKey: AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED
