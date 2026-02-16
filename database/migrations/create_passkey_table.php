@@ -17,6 +17,7 @@ return new class extends Migration
                 ->foreignIdFor($authenticatableClass, 'authenticatable_id')
                 ->constrained(table: $authenticatableTableName, indexName: 'passkeys_authenticatable_fk')
                 ->cascadeOnDelete();
+            $table->string('name')->nullable();
             $table->text('credential_id');
             $table->json('data');
             $table->timestamps();

@@ -12,7 +12,8 @@ use Webauthn\PublicKeyCredentialSource;
 
 /**
  * @property int $id
- * @property int $user_id
+ * @property int $authenticatable_id
+ * @property string|null $name
  * @property string $credential_id
  * @property \Webauthn\PublicKeyCredentialSource $data
  * @property \Illuminate\Contracts\Auth\Authenticatable $user
@@ -22,7 +23,8 @@ class Passkey extends Model
     protected $table = 'passkeys';
 
     protected $fillable = [
-        'user_id',
+        'authenticatable_id',
+        'name',
         'credential_id',
         'data',
     ];

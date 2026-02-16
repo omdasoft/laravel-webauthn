@@ -27,6 +27,7 @@ class LaravelWebauthnController extends Controller
         $validated = $request->validate([
             'challenge_id' => 'required|string',
             'passkey' => 'required|array',
+            'name' => 'nullable|string|max:255',
         ]);
 
         $this->webauthn->completeAttestation($validated);

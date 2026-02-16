@@ -84,6 +84,7 @@ class LaravelWebauthn implements Webauthn
         }
 
         $user->passkeys()->create([
+            'name' => $params['name'] ?? null,
             'credential_id' => $source->publicKeyCredentialId,
             'data' => $source,
         ]);
