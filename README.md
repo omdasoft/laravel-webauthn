@@ -347,12 +347,6 @@ public function handle(WebauthnLogin $event)
 
 ## Testing and quality
 
-Run the test suite:
-
-```bash
-composer test
-```
-
 Run static analysis, formatting check, and tests (recommended for CI):
 
 ```bash
