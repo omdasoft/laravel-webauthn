@@ -239,6 +239,96 @@ Returns JSON with:
 
 - `token` (string) - If using `HandleSanctumLogin`.
 
+## Frontend Integration with `@simplewebauthn/browser`
+
+To integrate WebAuthn on the frontend, we will use the `@simplewebauthn/browser` library. Follow the steps below:
+
+### 1. Install `@simplewebauthn/browser`
+
+Install the library using npm or yarn:
+
+```bash
+npm install @simplewebauthn/browser
+# or
+yarn add @simplewebauthn/browser
+```
+
+### 2. Register a New Credential
+
+To allow users to register a new WebAuthn credential:
+
+```JavaScript
+import {
+  startRegistration,
+} from '@simplewebauthn/browser';
+
+async function registerWebAuthn() {
+  try {
+    // Fetch options from your backend
+    const response = await fetch('/api/webauthn/register/options', {
+      method: 'POST',
+    });
+    const options = await response.json();
+
+    // Start the registration process
+    const registrationResponse = await startRegistration(options);
+
+    // Send the response back to your backend
+    const verificationResponse = await fetch('/api/webauthn/register/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(registrationResponse),
+    });
+
+    if (verificationResponse.ok) {
+      console.log('Registration successful!');
+    } else {
+      console.error('Registration failed');
+    }
+  } catch (error) {
+    console.error('Error during registration:', error);
+  }
+}
+```
+
+### 3. Authenticate a User
+
+To authenticate a user using WebAuthn:
+
+```JavaScript
+import {
+  startAuthentication,
+} from '@simplewebauthn/browser';
+
+async function authenticateWebAuthn() {
+  try {
+    // Fetch options from your backend
+    const response = await fetch('/api/webauthn/authenticate/options', {
+      method: 'POST',
+    });
+    const options = await response.json();
+
+    // Start the authentication process
+    const authenticationResponse = await startAuthentication(options);
+
+    // Send the response back to your backend
+    const verificationResponse = await fetch('/api/webauthn/authenticate/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authenticationResponse),
+    });
+
+    if (verificationResponse.ok) {
+      console.log('Authentication successful!');
+    } else {
+      console.error('Authentication failed');
+    }
+  } catch (error) {
+    console.error('Error during authentication:', error);
+  }
+}
+```
+
 ### Events
 
 The package dispatches the following events:
