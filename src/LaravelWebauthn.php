@@ -19,11 +19,18 @@ use RuntimeException;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\PublicKeyCredential;
+use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialRequestOptions;
+use Webauthn\PublicKeyCredentialSource;
 
 class LaravelWebauthn implements Webauthn
 {
     public function __construct(
         protected ChallengeStorage $storage,
+        protected PrepareAttestationCreation $prepareAttestationCreation,
+        protected ValidateAttestationCreation $validateAttestationCreation,
+        protected PrepareAssertionRequest $prepareAssertionRequest,
+        protected ValidateAssertionRequest $validateAssertionRequest,
     ) {}
 
     /**
@@ -31,7 +38,7 @@ class LaravelWebauthn implements Webauthn
      */
     public function attestationOptions(): array
     {
-        $options = app(PrepareAttestationCreation::class)();
+        $options = ($this->prepareAttestationCreation)();
 
         $challengeId = $this->generateUniqueChallengeId();
 
@@ -59,7 +66,7 @@ class LaravelWebauthn implements Webauthn
             throw new RuntimeException('Challenge not found or expired');
         }
 
-        if (!$storedOptions instanceof \Webauthn\PublicKeyCredentialCreationOptions) {
+        if (!$storedOptions instanceof PublicKeyCredentialCreationOptions) {
             throw new RuntimeException('Invalid challenge options for attestation');
         }
 
@@ -70,7 +77,7 @@ class LaravelWebauthn implements Webauthn
             throw new RuntimeException('Invalid response type for attestation');
         }
 
-        $source = app(ValidateAttestationCreation::class)($storedOptions, $response);
+        $source = ($this->validateAttestationCreation)($storedOptions, $response);
 
         /** @var \Illuminate\Contracts\Auth\Authenticatable|null $user */
         $user = Request::user();
@@ -97,7 +104,7 @@ class LaravelWebauthn implements Webauthn
      */
     public function assertionOptions(): array
     {
-        $options = app(PrepareAssertionRequest::class)();
+        $options = ($this->prepareAssertionRequest)();
         $passkeyJson = Serializer::make()->toJson($options);
         $challengeId = $this->generateUniqueChallengeId();
 
@@ -124,7 +131,7 @@ class LaravelWebauthn implements Webauthn
             throw new RuntimeException('Challenge not found or expired');
         }
 
-        if (!$storedOptions instanceof \Webauthn\PublicKeyCredentialRequestOptions) {
+        if (!$storedOptions instanceof PublicKeyCredentialRequestOptions) {
             throw new RuntimeException('Invalid challenge options for assertion');
         }
 
@@ -140,7 +147,7 @@ class LaravelWebauthn implements Webauthn
             throw new RuntimeException('Passkey not found');
         }
 
-        /** @var \Webauthn\PublicKeyCredentialSource $source */
+        /** @var PublicKeyCredentialSource $source */
         $source = $passkey->getAttribute('data');
 
         /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
@@ -152,7 +159,7 @@ class LaravelWebauthn implements Webauthn
         }
 
         /** @var Authenticatable $user */
-        app(ValidateAssertionRequest::class)(
+        ($this->validateAssertionRequest)(
             $source,
             $response,
             $storedOptions,
