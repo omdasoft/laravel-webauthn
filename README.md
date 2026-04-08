@@ -42,7 +42,7 @@ composer require omdasoft/laravel-webauthn
 Publish the config, migration, and translations:
 
 ```bash
-php artisan vendor:publish --tag="webauthn"
+php artisan vendor:publish --provider="Omdasoft\LaravelWebauthn\LaravelWebauthnServiceProvider"
 ```
 
 Or publish individually:
