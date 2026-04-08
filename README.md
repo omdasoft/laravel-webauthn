@@ -42,15 +42,15 @@ composer require omdasoft/laravel-webauthn
 Publish the config, migration, and translations:
 
 ```bash
-php artisan vendor:publish --tag="laravel-webauthn"
+php artisan vendor:publish --tag="webauthn"
 ```
 
 Or publish individually:
 
 ```bash
-php artisan vendor:publish --tag="laravel-webauthn-config"
-php artisan vendor:publish --tag="laravel-webauthn-migrations"
-php artisan vendor:publish --tag="laravel-webauthn-translations"
+php artisan vendor:publish --tag="webauthn-config"
+php artisan vendor:publish --tag="webauthn-migrations"
+php artisan vendor:publish --tag="webauthn-translations"
 ```
 
 Run migrations:
@@ -98,7 +98,7 @@ WEBAUTHN_CHALLENGE_TTL=3600
 The package includes translatable error messages. You can publish them to customize the text:
 
 ```bash
-php artisan vendor:publish --tag="laravel-webauthn-translations"
+php artisan vendor:publish --tag="webauthn-translations"
 ```
 
 The translations will be available in `resources/lang/vendor/webauthn/en/errors.php`.
