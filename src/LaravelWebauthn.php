@@ -5,17 +5,23 @@ namespace Omdasoft\LaravelWebauthn;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
-use InvalidArgumentException;
 use Omdasoft\LaravelWebauthn\Actions\Assertion\PrepareAssertionRequest;
 use Omdasoft\LaravelWebauthn\Actions\Assertion\ValidateAssertionRequest;
 use Omdasoft\LaravelWebauthn\Actions\Attestation\PrepareAttestationCreation;
 use Omdasoft\LaravelWebauthn\Actions\Attestation\ValidateAttestationCreation;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
+use Omdasoft\LaravelWebauthn\Exceptions\ChallengeMissingException;
+use Omdasoft\LaravelWebauthn\Exceptions\ChallengeNotFoundException;
+use Omdasoft\LaravelWebauthn\Exceptions\InvalidChallengeOptionsException;
+use Omdasoft\LaravelWebauthn\Exceptions\InvalidResponseTypeException;
+use Omdasoft\LaravelWebauthn\Exceptions\PasskeyNotFoundException;
+use Omdasoft\LaravelWebauthn\Exceptions\PasskeyRelationshipMissingException;
+use Omdasoft\LaravelWebauthn\Exceptions\UserNotFoundException;
+use Omdasoft\LaravelWebauthn\Exceptions\UserUnauthenticatedException;
 use Omdasoft\LaravelWebauthn\Support\Config;
 use Omdasoft\LaravelWebauthn\Support\Serializer;
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use RuntimeException;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\PublicKeyCredential;
@@ -58,23 +64,23 @@ class LaravelWebauthn implements Webauthn
         $challengeId = $params['challenge_id'] ?? null;
 
         if (!$challengeId) {
-            throw new InvalidArgumentException('Challenge ID is required');
+            throw new ChallengeMissingException;
         }
 
         $storedOptions = $this->storage->get($challengeId);
         if (!$storedOptions) {
-            throw new RuntimeException('Challenge not found or expired');
+            throw new ChallengeNotFoundException;
         }
 
         if (!$storedOptions instanceof PublicKeyCredentialCreationOptions) {
-            throw new RuntimeException('Invalid challenge options for attestation');
+            throw new InvalidChallengeOptionsException('attestation');
         }
 
         $publicKeyCredential = Serializer::make()->fromArray($params['passkey'], PublicKeyCredential::class);
         $response = $publicKeyCredential->response;
 
         if (!$response instanceof AuthenticatorAttestationResponse) {
-            throw new RuntimeException('Invalid response type for attestation');
+            throw new InvalidResponseTypeException('attestation');
         }
 
         $source = ($this->validateAttestationCreation)($storedOptions, $response);
@@ -83,11 +89,11 @@ class LaravelWebauthn implements Webauthn
         $user = Request::user();
 
         if (!$user) {
-            throw new RuntimeException('User must be authenticated to register a passkey.');
+            throw new UserUnauthenticatedException;
         }
 
         if (!method_exists($user, 'passkeys')) {
-            throw new RuntimeException('The passkey relationship is missing on the user model.');
+            throw new PasskeyRelationshipMissingException;
         }
 
         $user->passkeys()->create([
@@ -123,28 +129,28 @@ class LaravelWebauthn implements Webauthn
     {
         $challengeId = $params['challenge_id'] ?? null;
         if (!$challengeId) {
-            throw new InvalidArgumentException('Challenge ID is required');
+            throw new ChallengeMissingException;
         }
 
         $storedOptions = $this->storage->get($challengeId);
         if (!$storedOptions) {
-            throw new RuntimeException('Challenge not found or expired');
+            throw new ChallengeNotFoundException;
         }
 
         if (!$storedOptions instanceof PublicKeyCredentialRequestOptions) {
-            throw new RuntimeException('Invalid challenge options for assertion');
+            throw new InvalidChallengeOptionsException('assertion');
         }
 
         $publicKeyCredential = Serializer::make()->fromArray($params['passkey'], PublicKeyCredential::class);
         $response = $publicKeyCredential->response;
 
         if (!$response instanceof AuthenticatorAssertionResponse) {
-            throw new RuntimeException('Invalid response type for assertion');
+            throw new InvalidResponseTypeException('assertion');
         }
 
         $passkey = $this->getPublickeyCredentialSource($publicKeyCredential->rawId);
         if (!$passkey) {
-            throw new RuntimeException('Passkey not found');
+            throw new PasskeyNotFoundException;
         }
 
         /** @var PublicKeyCredentialSource $source */
@@ -155,7 +161,7 @@ class LaravelWebauthn implements Webauthn
         $user = $userModel::find($source->userHandle);
 
         if (!$user) {
-            throw new RuntimeException('User not found');
+            throw new UserNotFoundException;
         }
 
         /** @var Authenticatable $user */
