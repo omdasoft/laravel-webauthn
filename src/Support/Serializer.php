@@ -65,7 +65,7 @@ class Serializer
         $attestationStatementSupportManager = AttestationStatementSupportManager::create();
         $attestationStatementSupportManager->add(NoneAttestationStatementSupport::create());
 
-        /** @var \Symfony\Component\Serializer\Serializer $serializer */
+        /** @var SymfonySerializer $serializer */
         $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
 
         return new self($serializer);

@@ -1,5 +1,8 @@
 <?php
 
+use Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin;
+use Omdasoft\LaravelWebauthn\Models\Passkey;
+
 // config for Omdasoft/LaravelWebauthn
 return [
     'route_prefix' => env('WEBAUTHN_ROUTE_PREFIX', 'api/webauthn'),
@@ -32,7 +35,7 @@ return [
      */
     'actions' => [
         // Options: HandleSanctumLogin::class (default), HandleSessionLogin::class, or null
-        'handle_login' => \Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin::class,
+        'handle_login' => HandleSanctumLogin::class,
     ],
 
     /*
@@ -40,7 +43,7 @@ return [
     * You can override this by specifying your own models
     */
     'models' => [
-        'passkey' => \Omdasoft\LaravelWebauthn\Models\Passkey::class,
+        'passkey' => Passkey::class,
         'authenticatable' => env('AUTH_MODEL', 'App\Models\User'),
     ],
 

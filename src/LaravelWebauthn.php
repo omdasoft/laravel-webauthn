@@ -19,6 +19,7 @@ use Omdasoft\LaravelWebauthn\Exceptions\PasskeyNotFoundException;
 use Omdasoft\LaravelWebauthn\Exceptions\PasskeyRelationshipMissingException;
 use Omdasoft\LaravelWebauthn\Exceptions\UserNotFoundException;
 use Omdasoft\LaravelWebauthn\Exceptions\UserUnauthenticatedException;
+use Omdasoft\LaravelWebauthn\Models\Passkey;
 use Omdasoft\LaravelWebauthn\Support\Config;
 use Omdasoft\LaravelWebauthn\Support\Serializer;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -85,7 +86,7 @@ class LaravelWebauthn implements Webauthn
 
         $source = ($this->validateAttestationCreation)($storedOptions, $response);
 
-        /** @var \Illuminate\Contracts\Auth\Authenticatable|null $user */
+        /** @var Authenticatable|null $user */
         $user = Request::user();
 
         if (!$user) {
@@ -156,7 +157,7 @@ class LaravelWebauthn implements Webauthn
         /** @var PublicKeyCredentialSource $source */
         $source = $passkey->getAttribute('data');
 
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $userModel */
+        /** @var class-string<Model> $userModel */
         $userModel = Config::getAuthenticatableModel();
         $user = $userModel::find($source->userHandle);
 
@@ -191,7 +192,7 @@ class LaravelWebauthn implements Webauthn
      */
     protected function getPublickeyCredentialSource(string $credentialId): ?Model
     {
-        /** @var class-string<\Omdasoft\LaravelWebauthn\Models\Passkey> $passkeyModel */
+        /** @var class-string<Passkey> $passkeyModel */
         $passkeyModel = Config::getPassKeyModel();
 
         return $passkeyModel::query()->where('credential_id', Base64UrlSafe::encode($credentialId))->first();

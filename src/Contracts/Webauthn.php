@@ -2,6 +2,8 @@
 
 namespace Omdasoft\LaravelWebauthn\Contracts;
 
+use Illuminate\Contracts\Auth\Authenticatable;
+
 interface Webauthn
 {
     /**
@@ -22,5 +24,5 @@ interface Webauthn
     /**
      * @param  array<string, mixed>  $params
      */
-    public function completeAssertion(array $params): \Illuminate\Contracts\Auth\Authenticatable;
+    public function completeAssertion(array $params): Authenticatable;
 }

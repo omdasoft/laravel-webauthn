@@ -2,7 +2,12 @@
 
 namespace Omdasoft\LaravelWebauthn\Tests\Feature;
 
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Event;
+use Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin;
+use Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
+use Omdasoft\LaravelWebauthn\Events\WebauthnLogin;
 use Omdasoft\LaravelWebauthn\Tests\Fixtures\User;
 use Omdasoft\LaravelWebauthn\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -83,7 +88,7 @@ class WebauthnRoutesTest extends TestCase
     #[Test]
     public function user_can_login(): void
     {
-        \Illuminate\Support\Facades\Event::fake();
+        Event::fake();
 
         $user = User::query()->create([
             'name' => 'Test',
@@ -99,10 +104,10 @@ class WebauthnRoutesTest extends TestCase
         $this->app->instance(Webauthn::class, $mock);
 
         // Mock the action to avoid needing Sanctum setup in this test
-        $this->app->bind(\Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin::class, function () {
-            return new class implements \Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction
+        $this->app->bind(HandleSanctumLogin::class, function () {
+            return new class implements HandleLoginAction
             {
-                public function execute(\Illuminate\Contracts\Auth\Authenticatable $user): array
+                public function execute(Authenticatable $user): array
                 {
                     return ['token' => 'mocked-token'];
                 }
@@ -116,7 +121,7 @@ class WebauthnRoutesTest extends TestCase
             ->assertOk()
             ->assertJson(['token' => 'mocked-token']);
 
-        \Illuminate\Support\Facades\Event::assertDispatched(\Omdasoft\LaravelWebauthn\Events\WebauthnLogin::class, function ($event) use ($user) {
+        Event::assertDispatched(WebauthnLogin::class, function ($event) use ($user) {
             return $event->user->is($user);
         });
     }

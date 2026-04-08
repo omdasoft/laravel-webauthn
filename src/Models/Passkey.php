@@ -2,6 +2,7 @@
 
 namespace Omdasoft\LaravelWebauthn\Models;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,8 +16,8 @@ use Webauthn\PublicKeyCredentialSource;
  * @property int $authenticatable_id
  * @property string|null $name
  * @property string $credential_id
- * @property \Webauthn\PublicKeyCredentialSource $data
- * @property \Illuminate\Contracts\Auth\Authenticatable $user
+ * @property PublicKeyCredentialSource $data
+ * @property Authenticatable $user
  */
 class Passkey extends Model
 {
@@ -34,7 +35,7 @@ class Passkey extends Model
     ];
 
     /**
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function authenticatable(): BelongsTo
     {

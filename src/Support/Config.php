@@ -2,26 +2,29 @@
 
 namespace Omdasoft\LaravelWebauthn\Support;
 
+use Illuminate\Database\Eloquent\Model;
+use Omdasoft\LaravelWebauthn\Models\Passkey;
+
 class Config
 {
     /**
-     * @return class-string<\Illuminate\Database\Eloquent\Model>
+     * @return class-string<Model>
      */
     public static function getAuthenticatableModel(): string
     {
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $model */
+        /** @var class-string<Model> $model */
         $model = config('webauthn.models.authenticatable');
 
         return $model;
     }
 
     /**
-     * @return class-string<\Illuminate\Database\Eloquent\Model>
+     * @return class-string<Model>
      */
     public static function getPassKeyModel(): string
     {
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $model */
-        $model = config('webauthn.models.passkey', \Omdasoft\LaravelWebauthn\Models\Passkey::class);
+        /** @var class-string<Model> $model */
+        $model = config('webauthn.models.passkey', Passkey::class);
 
         return $model;
     }

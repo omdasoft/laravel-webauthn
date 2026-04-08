@@ -69,8 +69,11 @@ After publishing, you can configure the package in `config/webauthn.php`.
   - Default: `App\Models\User`
 
 - **`actions.handle_login`**
-  - The class that handles user login after successful WebAuthn assertion.
-  - Default: `Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin`
+  - The class that handles user login after successful WebAuthn assertion (login).
+  - Built-in options:
+    - `Omdasoft\LaravelWebauthn\Actions\Login\HandleSanctumLogin` (Default)
+    - `Omdasoft\LaravelWebauthn\Actions\Login\HandleSessionLogin`
+  - You can also create your own by implementing `HandleLoginAction`.
 
 Example `.env`:
 
@@ -82,9 +85,19 @@ WEBAUTHN_STORAGE_DRIVER=cache
 WEBAUTHN_CHALLENGE_TTL=3600
 ```
 
+## Translations
+
+The package includes translatable error messages. You can publish them to customize the text:
+
+```bash
+php artisan vendor:publish --tag="webauthn-translations"
+```
+
+The translations will be available in `resources/lang/vendor/webauthn/en/errors.php`.
+
 ## Flexibility and Custom Auth
 
-This package is designed to be flexible. You can use it with Sanctum (default), Session, JWT, or any other authentication system.
+This package is designed to be flexible. It works with Sanctum (default), Session, JWT, or any other authentication system.
 
 ### Customizing Middleware
 
@@ -99,73 +112,35 @@ Update your `config/webauthn.php`:
 
 ### Customizing Login Logic
 
-If you don't use Sanctum, create a class that implements `HandleLoginAction`:
+If you want to use standard Laravel sessions instead of Sanctum tokens, update `config/webauthn.php`:
+
+```php
+'actions' => [
+    'handle_login' => \Omdasoft\LaravelWebauthn\Actions\Login\HandleSessionLogin::class,
+],
+```
+
+For completely custom logic (e.g., JWT), create a class that implements `HandleLoginAction`:
 
 ```php
 namespace App\Actions;
 
 use Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Auth;
 
-class SessionLoginHandler implements HandleLoginAction
+class MyCustomLoginHandler implements HandleLoginAction
 {
     public function execute(Authenticatable $user): array
     {
-        Auth::login($user);
-        return ['status' => 'success'];
+        // Your custom logic here
+        return ['status' => 'success', 'custom_field' => 'value'];
     }
 }
 ```
 
-Then register it in `config/webauthn.php`:
-
-```php
-'actions' => [
-    'handle_login' => \App\Actions\SessionLoginHandler::class,
-],
-```
-
-### Manual Route Registration
-
-Register routes in your `routes/api.php` or `routes/web.php`:
-
-```php
-Route::webauthn();
-```
-
-Or with a custom prefix:
-
-```php
-Route::webauthn('auth/passkeys'); 
-```
-
-### Usage with Inertia or Web Sessions
-
-If you are building an Inertia.js application or a standard Blade app, you usually want the routes to be in the `web` middleware group to handle cookies and CSRF.
-
-1.  **Register routes manually** in `routes/web.php`:
-    ```php
-    // This will use the 'web' middleware group by default
-    Route::middleware(['web'])->group(function () {
-        Route::webauthn('auth/passkeys'); 
-    });
-    ```
-
-3.  **Configure for Sessions** in `config/webauthn.php`:
-    ```php
-    'middlewares' => [
-        'register' => ['auth'], // Use standard web auth
-        'login' => [],
-    ],
-    'actions' => [
-        'handle_login' => \App\Actions\SessionLoginHandler::class, // Your custom handler
-    ],
-    ```
-
 ## Model setup
 
-Add the `InteractWithPasskeys` trait and `HasPasskey` contract to your authenticatable user model:
+Add the `InteractWithPasskeys` trait and `HasPasskey` contract to your user model:
 
 ```php
 use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
@@ -178,117 +153,122 @@ class User extends Authenticatable implements HasPasskey
 }
 ```
 
-This adds a `passkeys()` relationship backed by the `passkeys` table.
+### Customizing User Identification
 
-## API Routes
-
-The package registers the following API routes under your configured prefix (default: `api/webauthn`):
-
-### Registration (Attestation)
-
-- `POST /api/webauthn/register/options` (requires `auth:sanctum`)
-- `POST /api/webauthn/register` (requires `auth:sanctum`)
-
-### Login (Assertion)
-
-- `POST /api/webauthn/login/options`
-- `POST /api/webauthn/login`
-
-### Custom Routes
-
-If you need full control over the routes, you can define them manually instead of using `Route::webauthn()`:
+If you want to change how the user's name or display name is sent to the authenticator (e.g., for the passkey creation prompt), you can override these methods in your `User` model:
 
 ```php
-Route::post('register/options', [\Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController::class, 'registerOptions'])->name('webauthn.register.options');
-// ...
-```
-
-## API Endpoints
-
-### `POST /api/webauthn/register/options`
-
-Returns JSON with:
-
-- `challenge_id`
-- `passkey` (PublicKeyCredentialCreationOptions as array)
-
-### `POST /api/webauthn/register`
-
-Expects:
-
-- `challenge_id` (string)
-- `passkey` (array)
-
-Completes attestation and stores the credential in the authenticated user's `passkeys()` relationship.
-
-### `POST /api/webauthn/login/options`
-
-Returns JSON with:
-
-- `challenge_id`
-- `passkey` (PublicKeyCredentialRequestOptions as array)
-
-### `POST /api/webauthn/login`
-
-Expects:
-
-- `challenge_id` (string)
-- `passkey` (array)
-
-Returns JSON with:
-
-- `token` (string) - If using `HandleSanctumLogin`.
-
-### Events
-
-The package dispatches the following events:
-
-- `Omdasoft\LaravelWebauthn\Events\WebauthnLogin`: Dispatched after a user successfully logs in via passkey.
-
-```php
-use Omdasoft\LaravelWebauthn\Events\WebauthnLogin;
-
-// In your EventServiceProvider or dedicated listener
-public function handle(WebauthnLogin $event)
+public function getPasskeyIdentifier(): string // Default: $this->id
 {
-    // $event->user is the authenticated user
+    return (string) $this->uuid;
+}
+
+public function getPasskeyName(): string // Default: $this->email
+{
+    return $this->username;
+}
+
+public function getPasskeyDisplayName(): string // Default: $this->name
+{
+    return $this->full_name;
 }
 ```
 
-## Testing and quality
+## API Routes and Endpoints
 
-Run the test suite:
+The package registers the following routes under your configured prefix (default: `api/webauthn`):
 
-```bash
-composer test
+### Registration (Attestation)
+- `POST /register/options` - Get creation options.
+- `POST /register` - Submit attestation response. Accepts an optional `name` field to label the passkey.
+
+### Login (Assertion)
+- `POST /login/options` - Get assertion options.
+- `POST /login` - Submit assertion response.
+
+## Error Handling
+
+The package throws specific exceptions when something goes wrong. These exceptions return translatable messages:
+
+- `ChallengeMissingException`: The challenge ID was not provided.
+- `ChallengeNotFoundException`: The challenge has expired or does not exist.
+- `UserUnauthenticatedException`: Registration attempted without being logged in.
+- `PasskeyNotFoundException`: The passkey requested for login was not found.
+- `UserNotFoundException`: The user associated with the passkey was not found.
+
+## Events
+
+The package dispatches:
+- `Omdasoft\LaravelWebauthn\Events\WebauthnLogin`: Dispatched after a successful login.
+
+```php
+public function handle(WebauthnLogin $event)
+{
+    // $event->user is the logged-in user
+}
 ```
 
-Run static analysis, formatting check, and tests (recommended for CI):
+## Frontend Implementation
+
+Since this is an API-first package, you need a frontend library to interact with the browser's WebAuthn API. We recommend using [@simplewebauthn/browser](https://simplewebauthn.io/docs/packages/browser).
+
+### 1. Registering a Passkey
+
+```javascript
+import { startRegistration } from '@simplewebauthn/browser';
+
+const registerPasskey = async () => {
+    // 1. Get registration options from your Laravel API
+    const resp = await axios.post('/api/webauthn/register/options');
+    const { challenge_id, passkey: options } = resp.data;
+
+    // 2. Start the browser registration process
+    const attestationResponse = await startRegistration(options);
+
+    // 3. Send the response back to your API to complete registration
+    await axios.post('/api/webauthn/register', {
+        challenge_id,
+        passkey: attestationResponse,
+        name: 'My MacBook Pro' // Optional name for the passkey
+    });
+};
+```
+
+### 2. Logging in with a Passkey
+
+```javascript
+import { startAuthentication } from '@simplewebauthn/browser';
+
+const loginWithPasskey = async () => {
+    try {
+        // 1. Get authentication options
+        const resp = await axios.post('/api/webauthn/login/options');
+        const { challenge_id, passkey: options } = resp.data;
+
+        // 2. Pass options to the browser API
+        const assertionResponse = await startAuthentication(options);
+
+        // 3. Complete authentication
+        const loginResp = await axios.post('/api/webauthn/login', {
+            challenge_id,
+            passkey: assertionResponse
+        });
+
+        // 4. Handle success (e.g., redirect or update state)
+        window.location.href = '/dashboard';
+    } catch (error) {
+        console.error('Passkey authentication failed', error);
+    }
+};
+```
+
+## Testing and quality
 
 ```bash
 composer ci
 ```
 
-## Security notes
-
-WebAuthn is security-sensitive.
-
-- Always serve your app over HTTPS.
-- Ensure `WEBAUTHN_DOMAIN` matches your real origin.
-- Review token issuing (`createToken`) and authentication middleware configuration.
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+

@@ -5,6 +5,7 @@ namespace Omdasoft\LaravelWebauthn;
 use Illuminate\Support\Facades\Route;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
+use Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController;
 use Omdasoft\LaravelWebauthn\Storage\StorageManager;
 use Omdasoft\LaravelWebauthn\Support\Config;
 use Omdasoft\LaravelWebauthn\Support\Serializer;
@@ -38,14 +39,14 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
             Route::prefix($prefix)->group(function () {
                 // Attestation (Registration)
                 Route::middleware(config('webauthn.middlewares.register', []))->group(function () {
-                    Route::post('register/options', [\Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController::class, 'registerOptions'])->name('webauthn.register.options');
-                    Route::post('register', [\Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController::class, 'register'])->name('webauthn.register');
+                    Route::post('register/options', [LaravelWebauthnController::class, 'registerOptions'])->name('webauthn.register.options');
+                    Route::post('register', [LaravelWebauthnController::class, 'register'])->name('webauthn.register');
                 });
 
                 // Assertion (Login)
                 Route::middleware(config('webauthn.middlewares.login', []))->group(function () {
-                    Route::post('login/options', [\Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController::class, 'loginOptions'])->name('webauthn.login.options');
-                    Route::post('login', [\Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController::class, 'login'])->name('webauthn.login');
+                    Route::post('login/options', [LaravelWebauthnController::class, 'loginOptions'])->name('webauthn.login.options');
+                    Route::post('login', [LaravelWebauthnController::class, 'login'])->name('webauthn.login');
                 });
             });
         });
