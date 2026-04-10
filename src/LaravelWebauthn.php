@@ -4,21 +4,19 @@ namespace Omdasoft\LaravelWebauthn;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Request;
 use Omdasoft\LaravelWebauthn\Actions\Assertion\PrepareAssertionRequest;
 use Omdasoft\LaravelWebauthn\Actions\Assertion\ValidateAssertionRequest;
 use Omdasoft\LaravelWebauthn\Actions\Attestation\PrepareAttestationCreation;
 use Omdasoft\LaravelWebauthn\Actions\Attestation\ValidateAttestationCreation;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
+use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
 use Omdasoft\LaravelWebauthn\Exceptions\ChallengeMissingException;
 use Omdasoft\LaravelWebauthn\Exceptions\ChallengeNotFoundException;
 use Omdasoft\LaravelWebauthn\Exceptions\InvalidChallengeOptionsException;
 use Omdasoft\LaravelWebauthn\Exceptions\InvalidResponseTypeException;
 use Omdasoft\LaravelWebauthn\Exceptions\PasskeyNotFoundException;
-use Omdasoft\LaravelWebauthn\Exceptions\PasskeyRelationshipMissingException;
 use Omdasoft\LaravelWebauthn\Exceptions\UserNotFoundException;
-use Omdasoft\LaravelWebauthn\Exceptions\UserUnauthenticatedException;
 use Omdasoft\LaravelWebauthn\Models\Passkey;
 use Omdasoft\LaravelWebauthn\Support\Config;
 use Omdasoft\LaravelWebauthn\Support\Serializer;
@@ -43,9 +41,9 @@ class LaravelWebauthn implements Webauthn
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}
      */
-    public function attestationOptions(): array
+    public function attestationOptions(HasPasskey $user): array
     {
-        $options = ($this->prepareAttestationCreation)();
+        $options = ($this->prepareAttestationCreation)($user);
 
         $challengeId = $this->generateUniqueChallengeId();
 
@@ -60,7 +58,7 @@ class LaravelWebauthn implements Webauthn
     /**
      * @param  array<string, mixed>  $params
      */
-    public function completeAttestation(array $params): void
+    public function completeAttestation(array $params, HasPasskey $user): void
     {
         $challengeId = $params['challenge_id'] ?? null;
 
@@ -85,17 +83,6 @@ class LaravelWebauthn implements Webauthn
         }
 
         $source = ($this->validateAttestationCreation)($storedOptions, $response);
-
-        /** @var Authenticatable|null $user */
-        $user = Request::user();
-
-        if (!$user) {
-            throw new UserUnauthenticatedException;
-        }
-
-        if (!method_exists($user, 'passkeys')) {
-            throw new PasskeyRelationshipMissingException;
-        }
 
         $user->passkeys()->create([
             'name' => $params['name'] ?? null,

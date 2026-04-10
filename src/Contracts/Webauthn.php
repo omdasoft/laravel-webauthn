@@ -9,12 +9,12 @@ interface Webauthn
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}
      */
-    public function attestationOptions(): array;
+    public function attestationOptions(HasPasskey $user): array;
 
     /**
      * @param  array<string, mixed>  $params
      */
-    public function completeAttestation(array $params): void;
+    public function completeAttestation(array $params, HasPasskey $user): void;
 
     /**
      * @return array{challenge_id: string, passkey: array<string, mixed>}

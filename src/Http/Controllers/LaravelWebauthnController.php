@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction;
+use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
 use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
 use Omdasoft\LaravelWebauthn\Events\WebauthnLogin;
 
@@ -17,7 +18,9 @@ class LaravelWebauthnController extends Controller
 
     public function registerOptions(Request $request): JsonResponse
     {
-        $options = $this->webauthn->attestationOptions();
+        /** @var HasPasskey $user */
+        $user = $request->user();
+        $options = $this->webauthn->attestationOptions($user);
 
         return response()->json($options);
     }
@@ -30,7 +33,10 @@ class LaravelWebauthnController extends Controller
             'name' => 'nullable|string|max:255',
         ]);
 
-        $this->webauthn->completeAttestation($validated);
+        /** @var HasPasskey $user */
+        $user = $request->user();
+
+        $this->webauthn->completeAttestation($validated, $user);
     }
 
     public function loginOptions(Request $request): JsonResponse

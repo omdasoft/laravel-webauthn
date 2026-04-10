@@ -4,7 +4,6 @@ namespace Omdasoft\LaravelWebauthn\Actions\Attestation;
 
 use Illuminate\Support\Str;
 use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
-use Omdasoft\LaravelWebauthn\Exceptions\UserUnauthenticatedException;
 use Omdasoft\LaravelWebauthn\Support\Config;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\PublicKeyCredentialCreationOptions;
@@ -13,15 +12,8 @@ use Webauthn\PublicKeyCredentialUserEntity;
 
 class PrepareAttestationCreation
 {
-    public function __invoke(): PublicKeyCredentialCreationOptions
+    public function __invoke(HasPasskey $user): PublicKeyCredentialCreationOptions
     {
-        /** @var HasPasskey|null $user */
-        $user = request()->user();
-
-        if (!$user) {
-            throw new UserUnauthenticatedException;
-        }
-
         return new PublicKeyCredentialCreationOptions(
             rp: new PublicKeyCredentialRpEntity(
                 name: Config::relyingPartyName(),
