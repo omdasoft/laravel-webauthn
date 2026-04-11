@@ -5,27 +5,25 @@ namespace Omdasoft\LaravelWebauthn\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Omdasoft\LaravelWebauthn\Actions\Assertion\AuthenticatePasskey;
+use Omdasoft\LaravelWebauthn\Actions\Assertion\GenerateLoginOptions;
+use Omdasoft\LaravelWebauthn\Actions\Attestation\GenerateRegistrationOptions;
+use Omdasoft\LaravelWebauthn\Actions\Attestation\RegisterPasskey;
 use Omdasoft\LaravelWebauthn\Contracts\HandleLoginAction;
 use Omdasoft\LaravelWebauthn\Contracts\HasPasskey;
-use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
 use Omdasoft\LaravelWebauthn\Events\WebauthnLogin;
 
 class LaravelWebauthnController extends Controller
 {
-    public function __construct(
-        protected Webauthn $webauthn
-    ) {}
-
-    public function registerOptions(Request $request): JsonResponse
+    public function registerOptions(Request $request, GenerateRegistrationOptions $action): JsonResponse
     {
         /** @var HasPasskey $user */
         $user = $request->user();
-        $options = $this->webauthn->attestationOptions($user);
 
-        return response()->json($options);
+        return response()->json($action->execute($user));
     }
 
-    public function register(Request $request): void
+    public function register(Request $request, RegisterPasskey $action): void
     {
         $validated = $request->validate([
             'challenge_id' => 'required|string',
@@ -36,24 +34,22 @@ class LaravelWebauthnController extends Controller
         /** @var HasPasskey $user */
         $user = $request->user();
 
-        $this->webauthn->completeAttestation($validated, $user);
+        $action->execute($validated, $user);
     }
 
-    public function loginOptions(Request $request): JsonResponse
+    public function loginOptions(GenerateLoginOptions $action): JsonResponse
     {
-        $options = $this->webauthn->assertionOptions();
-
-        return response()->json($options);
+        return response()->json($action->execute());
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(Request $request, AuthenticatePasskey $action): JsonResponse
     {
         $validated = $request->validate([
             'challenge_id' => 'required|string',
             'passkey' => 'required|array',
         ]);
 
-        $user = $this->webauthn->completeAssertion($validated);
+        $user = $action->execute($validated);
 
         WebauthnLogin::dispatch($user);
 

@@ -4,7 +4,6 @@ namespace Omdasoft\LaravelWebauthn;
 
 use Illuminate\Support\Facades\Route;
 use Omdasoft\LaravelWebauthn\Contracts\ChallengeStorage;
-use Omdasoft\LaravelWebauthn\Contracts\Webauthn;
 use Omdasoft\LaravelWebauthn\Http\Controllers\LaravelWebauthnController;
 use Omdasoft\LaravelWebauthn\Storage\StorageManager;
 use Omdasoft\LaravelWebauthn\Support\Config;
@@ -54,10 +53,6 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
-        $this->app->singleton(Webauthn::class, function ($app) {
-            return $app->make(LaravelWebauthn::class);
-        });
-
         $this->app->bind(ChallengeStorage::class, function ($app) {
             return $app->make(StorageManager::class)->driver();
         });
