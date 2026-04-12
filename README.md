@@ -29,7 +29,7 @@ This package is **in progress** and is **not ready for production use**.
 ## Requirements
 
 - PHP `^8.3`
-- Laravel `10|11|12`
+- Laravel `10|11|12|13`
 
 ## Installation
 
