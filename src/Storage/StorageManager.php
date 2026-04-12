@@ -22,11 +22,11 @@ class StorageManager extends Manager
 
     public function createCacheDriver(): ChallengeStorage
     {
-        return new CacheStorage;
+        return $this->container->make(CacheStorage::class);
     }
 
     public function createSessionDriver(): ChallengeStorage
     {
-        return new SessionStorage;
+        return $this->container->make(SessionStorage::class);
     }
 }
