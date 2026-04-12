@@ -83,14 +83,25 @@ After publishing, you can configure the package in `config/webauthn.php`.
     - `Omdasoft\LaravelWebauthn\Actions\Login\HandleSessionLogin`
   - You can also create your own by implementing `HandleLoginAction`.
 
-Example `.env`:
-
 ```env
 WEBAUTHN_RELYING_PARTY_ID=example.com
 WEBAUTHN_RELYING_PARTY_NAME="My Awesome App"
 WEBAUTHN_ROUTE_PREFIX=api/webauthn
 WEBAUTHN_STORAGE_DRIVER=cache
 WEBAUTHN_CHALLENGE_TTL=3600
+```
+
+## Challenge Storage
+
+WebAuthn requires a challenge to be stored on the server between the initial "options" request and the final verification request. You can choose how this is stored:
+
+- **`cache` (Default)**: Recommended for **stateless APIs** and applications using **Sanctum with Bearer tokens**. The challenge is retrieved using the `challenge_id` sent by the client.
+- **`session`**: Recommended for **stateful applications** (Inertia.js, Livewire, or Blade). This requires the client to support cookies to persist the session between requests.
+
+Update your `.env` to choose the driver:
+
+```env
+WEBAUTHN_STORAGE_DRIVER=cache
 ```
 
 ## Translations
