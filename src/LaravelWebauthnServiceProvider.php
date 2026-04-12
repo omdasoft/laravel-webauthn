@@ -33,7 +33,7 @@ class LaravelWebauthnServiceProvider extends PackageServiceProvider
     protected function registerRouteMacros(): void
     {
         Route::macro('webauthn', function (?string $prefix = null) {
-            $prefix = $prefix ?? config('webauthn.route_prefix', 'api/webauthn');
+            $prefix = $prefix ?? Config::routePrefix();
 
             Route::prefix($prefix)->group(function () {
                 // Attestation (Registration)

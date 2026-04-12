@@ -43,4 +43,9 @@ class Config
     {
         return config('webauthn.relying_party.name');
     }
+
+    public static function routePrefix(): string
+    {
+        return config('webauthn.route_prefix', 'webauthn');
+    }
 }

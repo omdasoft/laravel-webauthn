@@ -5,7 +5,7 @@ use Omdasoft\LaravelWebauthn\Models\Passkey;
 
 // config for Omdasoft/LaravelWebauthn
 return [
-    'route_prefix' => env('WEBAUTHN_ROUTE_PREFIX', 'api/webauthn'),
+    'route_prefix' => env('WEBAUTHN_ROUTE_PREFIX', 'webauthn'),
 
     'middlewares' => [
         /*

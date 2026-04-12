@@ -195,7 +195,7 @@ public function getPasskeyDisplayName(): string // Default: $this->name
 
 ## API Routes and Endpoints
 
-The package registers the following routes under your configured prefix (default: `api/webauthn`):
+The package registers the following routes under your configured prefix (default: `webauthn`):
 
 ### Registration (Attestation)
 - `POST /register/options` - Get creation options.
@@ -238,14 +238,14 @@ import { startRegistration } from '@simplewebauthn/browser';
 
 const registerPasskey = async () => {
     // 1. Get registration options from your Laravel API
-    const resp = await axios.post('/api/webauthn/register/options');
+    const resp = await axios.post('/webauthn/register/options');
     const { challenge_id, passkey: options } = resp.data;
 
     // 2. Start the browser registration process
     const attestationResponse = await startRegistration(options);
 
     // 3. Send the response back to your API to complete registration
-    await axios.post('/api/webauthn/register', {
+    await axios.post('/webauthn/register', {
         challenge_id,
         passkey: attestationResponse,
         name: 'My MacBook Pro' // Optional name for the passkey
@@ -261,14 +261,14 @@ import { startAuthentication } from '@simplewebauthn/browser';
 const loginWithPasskey = async () => {
     try {
         // 1. Get authentication options
-        const resp = await axios.post('/api/webauthn/login/options');
+        const resp = await axios.post('/webauthn/login/options');
         const { challenge_id, passkey: options } = resp.data;
 
         // 2. Pass options to the browser API
         const assertionResponse = await startAuthentication(options);
 
         // 3. Complete authentication
-        const loginResp = await axios.post('/api/webauthn/login', {
+        const loginResp = await axios.post('/webauthn/login', {
             challenge_id,
             passkey: assertionResponse
         });
