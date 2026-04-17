@@ -36,7 +36,13 @@ class Config
 
     public static function relyingPartyId(): string
     {
-        return config('webauthn.relying_party.id');
+        $url = config('webauthn.relying_party.id');
+
+        if (parse_url($url, PHP_URL_SCHEME)) {
+            return parse_url($url, PHP_URL_HOST) ?? $url;
+        }
+
+        return $url;
     }
 
     public static function relyingPartyName(): string
