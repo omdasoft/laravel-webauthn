@@ -1,12 +1,23 @@
 {
     "name": "omdasoft/laravel-webauthn",
-    "description": "A web authn package for laravel",
+    "description": "A WebAuthn (passkeys) backend API package for Laravel — API-first, action-based, and fully customizable.",
     "keywords": [
         "omdasoft",
         "laravel",
-        "laravel-webauthn"
+        "laravel-webauthn",
+        "webauthn",
+        "passkey",
+        "passkeys",
+        "fido2",
+        "authentication",
+        "passwordless"
     ],
     "homepage": "https://github.com/omdasoft/laravel-webauthn",
+    "support": {
+        "issues": "https://github.com/omdasoft/laravel-webauthn/issues",
+        "source": "https://github.com/omdasoft/laravel-webauthn",
+        "docs": "https://github.com/omdasoft/laravel-webauthn#readme"
+    },
     "license": "MIT",
     "authors": [
         {

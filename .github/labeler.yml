@@ -1,0 +1,17 @@
+# Labels applied to PRs based on branch naming conventions.
+# Requires the actions/labeler workflow to be set up.
+
+bug:
+  - head-branch: ['^fix/', '^bugfix/', '^hotfix/']
+
+enhancement:
+  - head-branch: ['^feature/', '^feat/']
+
+documentation:
+  - head-branch: ['^docs/', '^doc/']
+
+dependencies:
+  - head-branch: ['^chore/update', '^chore/deps', '^deps/']
+
+refactor:
+  - head-branch: ['^refactor/', '^chore/refactor']

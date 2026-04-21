@@ -2,6 +2,9 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
 [![Total Downloads](https://img.shields.io/packagist/dt/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
+[![Tests](https://img.shields.io/github/actions/workflow/status/omdasoft/laravel-webauthn/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/omdasoft/laravel-webauthn/actions/workflows/run-tests.yml)
+[![PHPStan](https://img.shields.io/github/actions/workflow/status/omdasoft/laravel-webauthn/phpstan.yml?branch=main&label=phpstan&style=flat-square)](https://github.com/omdasoft/laravel-webauthn/actions/workflows/phpstan.yml)
+[![License](https://img.shields.io/packagist/l/omdasoft/laravel-webauthn.svg?style=flat-square)](https://packagist.org/packages/omdasoft/laravel-webauthn)
 
 A Laravel package that provides a **backend API implementation** for WebAuthn (passkeys) authentication, designed for **API-first applications** with separate frontends.
 
@@ -19,12 +22,13 @@ The package provides:
 - **InteractWithPasskeys trait** - Easy integration with your User (Authenticatable) model.
 - **Configurable API routes** - Customizable prefix and middleware support.
 
-## Project status
+## Project Status
 
-This package is **in progress** and is **not ready for production use**.
+This package is **stable** and ready for production use.
+All breaking changes are documented in [CHANGELOG.md](CHANGELOG.md) and follow [Semantic Versioning](https://semver.org).
 
-- The API surface (routes, request methods, responses) may change.
-- The current implementation focuses on wiring and integration; you should perform a full security review before using in a real system.
+Found a bug? [Open an issue](https://github.com/omdasoft/laravel-webauthn/issues).
+Want to contribute? Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Requirements
 
