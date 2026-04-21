@@ -22,6 +22,10 @@ The package provides:
 - **InteractWithPasskeys trait** - Easy integration with your User (Authenticatable) model.
 - **Configurable API routes** - Customizable prefix and middleware support.
 
+## Demo
+
+<img width="800" height="400" alt="Passkey registration and login demo" src="https://github.com/user-attachments/assets/dbb11185-31f1-48f8-a526-6d04c74dccf5" />
+
 ## Project Status
 
 This package is **stable** and ready for production use.
